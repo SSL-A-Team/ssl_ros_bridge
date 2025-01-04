@@ -18,8 +18,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef TEAM_CLIENT_HPP_
-#define TEAM_CLIENT_HPP_
+#ifndef TEAM_CLIENT__TEAM_CLIENT_HPP_
+#define TEAM_CLIENT__TEAM_CLIENT_HPP_
 
 #include <ssl_league_protobufs/ssl_gc_rcon_team.pb.h>
 #include <array>
@@ -107,4 +107,4 @@ private:
 };
 
 }  // namespace ssl_ros_bridge::game_controller_bridge
-#endif  // TEAM_CLIENT_HPP_
+#endif  // TEAM_CLIENT__TEAM_CLIENT_HPP_

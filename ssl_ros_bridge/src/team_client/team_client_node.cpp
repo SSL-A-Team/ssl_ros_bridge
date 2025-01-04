@@ -69,7 +69,8 @@ public:
         &TeamClientNode::HandleSetAdvantageChoice, this, std::placeholders::_1,
         std::placeholders::_2), rclcpp::ServicesQoS());
 
-    connection_status_publisher_ = create_publisher<ssl_ros_bridge_msgs::msg::TeamClientConnectionStatus>(
+    connection_status_publisher_ =
+      create_publisher<ssl_ros_bridge_msgs::msg::TeamClientConnectionStatus>(
       "~/connection_status", rclcpp::ServicesQoS());
 
     const auto ping_period = declare_parameter<double>("ping_period", 5);
@@ -85,10 +86,12 @@ public:
 
 private:
   TeamClient team_client_;
-  rclcpp::Service<ssl_ros_bridge_msgs::srv::SetDesiredKeeper>::SharedPtr set_desired_keeper_service_;
+  rclcpp::Service<ssl_ros_bridge_msgs::srv::SetDesiredKeeper>::SharedPtr
+    set_desired_keeper_service_;
   rclcpp::Service<ssl_ros_bridge_msgs::srv::SubstituteBot>::SharedPtr substitute_bot_service_;
   rclcpp::Service<ssl_ros_bridge_msgs::srv::ReconnectTeamClient>::SharedPtr reconnect_service_;
-  rclcpp::Service<ssl_ros_bridge_msgs::srv::SetTeamAdvantageChoice>::SharedPtr advantage_choice_service_;
+  rclcpp::Service<ssl_ros_bridge_msgs::srv::SetTeamAdvantageChoice>::SharedPtr
+    advantage_choice_service_;
   rclcpp::Publisher<ssl_ros_bridge_msgs::msg::TeamClientConnectionStatus>::SharedPtr
     connection_status_publisher_;
   rclcpp::TimerBase::SharedPtr ping_timer_;
