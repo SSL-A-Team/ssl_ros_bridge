@@ -4,7 +4,7 @@ This repository provides ROS 2 packages containing utilities for connecting your
 
 ## Installation
 
-This repo is designed to be cloned into a colcon workspace. You can clone this repo alongside your own code or as a submodule within your own repository.
+This repo is designed to be built in a colcon workspace. You can clone this repo alongside your own code or as a submodule within your own repository.
 
 ## Usage
 
@@ -14,7 +14,9 @@ For most teams, in most scenarios, the only parameter that needs to be configure
 
 Two launch files are provided in ssl_ros_bridge for basic scenarios: [ssl_ros_bridge.launch.xml](ssl_ros_bridge/launch/ssl_ros_bridge.launch.xml) and [ssl_ros_bridge_localhost_only.launch.xml](ssl_ros_bridge/launch/ssl_ros_bridge_localhost_only.launch.xml). The first listens for multicast traffic on all interfaces. The localhost only launch file restricts the multicast listening to the loopback interface (127.0.0.1) and sets the game controller server address to 127.0.0.1. The localhost only launch file is useful when using simulation to prevent traffic from other simulation setups on the same network from interfering with your system.
 
-_Note_: You may need to enable multicast on the loopback interface as many linux environments have it disabled by default.
+> **Note**
+>
+> You may need to enable multicast on the loopback interface as many linux environments have it disabled by default.
 
 Either of these launch files can be included in your own launch file, specifying your team name.
 
@@ -38,7 +40,9 @@ This package defines ROS messages which closely mirror the league protobufs.
 
 The SSL League protobufs make extensive use of optional fields, which are unfortunately not currently supported in ROS messages. ssl_ros_bridge uses array field types to hold optionals. These fields will either hold one or zero elements. This does introduce some ambiguity between optional fields and actual array fields. Users should refer to the corresponding protobuf definitions for clarity.
 
-_Note:_ ROS fields do support bounded-size array types. We could enforce the "zero or one" behavior with these size limits, but this has caused problems with some ROS tools in the past (ie. PlotJuggler) which don't parse the message definitions correctly with these limits in place.
+> **Note**
+>
+> ROS fields do support bounded-size array types. We could enforce the "zero or one" behavior with these size limits, but this has caused problems with some ROS tools in the past (ie. PlotJuggler) which don't parse the message definitions correctly with these limits in place.
 
 #### Recursive Message Definitions
 
@@ -167,4 +171,4 @@ _Note_: Encrypted connections are not currently supported.
 
 ## Contributing
 
-See [our contributing guidelines](CONTRIBUTING.md) 
+See [our contributing guidelines](CONTRIBUTING.md).

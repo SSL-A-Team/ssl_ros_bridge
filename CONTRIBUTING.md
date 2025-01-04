@@ -6,16 +6,12 @@ All types of contributions are encouraged and valued. See the [Table of Contents
 
 ## Table of Contents
 
-- [Code of Conduct](#code-of-conduct)
+<!-- - [Code of Conduct](#code-of-conduct) -->
 - [I Have a Question](#i-have-a-question)
 - [I Want To Contribute](#i-want-to-contribute)
-- [Reporting Bugs](#reporting-bugs)
-- [Suggesting Enhancements](#suggesting-enhancements)
-- [Your First Code Contribution](#your-first-code-contribution)
-- [Improving The Documentation](#improving-the-documentation)
+  - [Reporting Bugs](#reporting-bugs)
+  - [Suggesting Enhancements](#suggesting-enhancements)
 - [Styleguides](#styleguides)
-- [Commit Messages](#commit-messages)
-- [Join The Project Team](#join-the-project-team)
 
 <!-- TODO
 ## Code of Conduct
@@ -27,7 +23,7 @@ to <>. -->
 
 ## I Have a Question
 
-<!-- > If you want to ask a question, we assume that you have read the available [Documentation](). -->
+> If you want to ask a question, we assume that you have read the available [documentation](README.md).
 
 Before you ask a question, it is best to search for existing [Issues](https://github.com/SSL-A-Team/ssl_ros_bridge/issues) or [Discussions](https://github.com/SSL-A-Team/ssl_ros_bridge/discussions) that might help you. In case you have found a suitable issue/topic and still need clarification, you can write your question in the existing issue/topic.
 
@@ -49,7 +45,7 @@ For quicker / shorter questions, you can also tag "@[A-Team] Matt Barulic" in th
 A good bug report shouldn't leave others needing to chase you up for more information. Therefore, we ask you to investigate carefully, collect information and describe the issue in detail in your report. Please complete the following steps in advance to help us fix any potential bug as fast as possible.
 
 - Make sure that you are using the latest version.
-- Determine if your bug is really a bug and not an error on your side e.g. using incompatible environment components/versions (Make sure that you have read the [documentation](). If you are looking for support, you might want to check [this section](#i-have-a-question)).
+- Determine if your bug is really a bug and not an error on your side e.g. using incompatible environment components/versions (Make sure that you have read the [documentation](README.md). If you are looking for support, you might want to check [this section](#i-have-a-question)).
 - To see if other users have experienced (and potentially already solved) the same issue you are having, check if there is not already a bug report existing for your bug or error in the [bug tracker](issues?q=label%3Abug).
 - Collect information about the bug:
     - Any relevant traces or log output
@@ -80,7 +76,7 @@ This section guides you through submitting an enhancement suggestion for CONTRIB
 #### Before Submitting an Enhancement
 
 - Make sure that you are using the latest version.
-- Read the [documentation]() carefully and find out if the functionality is already covered, maybe by an individual configuration.
+- Read the [documentation](README.md) carefully and find out if the functionality is already covered, maybe by an individual configuration.
 - Perform a [search](https://github.com/SSL-A-Team/ssl_ros_bridge/issues) to see if the enhancement has already been suggested. If it has, add a comment to the existing issue instead of opening a new one.
 - Find out whether your idea fits with the scope and aims of the project. It's up to you to make a strong case to convince the project's developers of the merits of this feature. Keep in mind that we want features that will be useful to the majority of our users and not just a small subset. If you're just targeting a minority of users, consider writing an add-on/plugin library.
 - Feel free to have early discussions about your suggestions via discussions or on Discord as presented in [this section](#i-have-a-question).
@@ -94,11 +90,6 @@ Enhancement suggestions are tracked as [GitHub issues](https://github.com/SSL-A-
 - **Describe the current behavior** and **explain which behavior you expected to see instead** and why. At this point you can also tell which alternatives do not work for you.
 - You may want to **include screenshots and animated GIFs** which help you demonstrate the steps or point out the part which the suggestion is related to.
 - **Explain why this enhancement would be useful** to most ssl_ros_bridge users. You may also want to point out the other projects that solved it better and which could serve as inspiration.
-
-<!-- TODO
-### Your First Code Contribution
-
-### Improving The Documentation -->
 
 ## Styleguides
 
