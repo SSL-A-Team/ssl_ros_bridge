@@ -29,9 +29,9 @@ to <>. -->
 
 <!-- > If you want to ask a question, we assume that you have read the available [Documentation](). -->
 
-Before you ask a question, it is best to search for existing [Issues](/issues) or [Discussions](/discussions) that might help you. In case you have found a suitable issue/topic and still need clarification, you can write your question in the existing issue/topic.
+Before you ask a question, it is best to search for existing [Issues](https://github.com/SSL-A-Team/ssl_ros_bridge/issues) or [Discussions](https://github.com/SSL-A-Team/ssl_ros_bridge/discussions) that might help you. In case you have found a suitable issue/topic and still need clarification, you can write your question in the existing issue/topic.
 
-If you don't find what you're looking for there, you can start a [new question topic](/discussions/new?category=q-a).
+If you don't find what you're looking for there, you can start a [new question topic](https://github.com/SSL-A-Team/ssl_ros_bridge/discussions/new?category=q-a).
 
 If it turns out your question highlights a new bug in our software, we'll create an issue from your Q&A post.
 
@@ -61,7 +61,7 @@ A good bug report shouldn't leave others needing to chase you up for more inform
 
 We use GitHub issues to track bugs and errors. If you run into an issue with the project:
 
-- Open an [Issue](/issues/new). (Since we can't be sure at this point whether it is a bug or not, we ask you not to talk about a bug yet and not to label the issue.)
+- Open an [Issue](https://github.com/SSL-A-Team/ssl_ros_bridge/issues/new). (Since we can't be sure at this point whether it is a bug or not, we ask you not to talk about a bug yet and not to label the issue.)
 - Explain the behavior you would expect and the actual behavior.
 - Please provide as much context as possible and describe the *reproduction steps* that someone else can follow to recreate the issue on their own. This usually includes your code. For good bug reports you should isolate the problem and create a reduced test case.
 - Provide the information you collected in the previous section.
@@ -81,13 +81,13 @@ This section guides you through submitting an enhancement suggestion for CONTRIB
 
 - Make sure that you are using the latest version.
 - Read the [documentation]() carefully and find out if the functionality is already covered, maybe by an individual configuration.
-- Perform a [search](/issues) to see if the enhancement has already been suggested. If it has, add a comment to the existing issue instead of opening a new one.
+- Perform a [search](https://github.com/SSL-A-Team/ssl_ros_bridge/issues) to see if the enhancement has already been suggested. If it has, add a comment to the existing issue instead of opening a new one.
 - Find out whether your idea fits with the scope and aims of the project. It's up to you to make a strong case to convince the project's developers of the merits of this feature. Keep in mind that we want features that will be useful to the majority of our users and not just a small subset. If you're just targeting a minority of users, consider writing an add-on/plugin library.
 - Feel free to have early discussions about your suggestions via discussions or on Discord as presented in [this section](#i-have-a-question).
 
 #### How Do I Submit a Good Enhancement Suggestion?
 
-Enhancement suggestions are tracked as [GitHub issues](/issues).
+Enhancement suggestions are tracked as [GitHub issues](https://github.com/SSL-A-Team/ssl_ros_bridge/issues).
 
 - Use a **clear and descriptive title** for the issue to identify the suggestion.
 - Provide a **step-by-step description of the suggested enhancement** in as many details as possible.

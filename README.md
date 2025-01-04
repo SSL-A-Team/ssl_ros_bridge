@@ -47,7 +47,7 @@ This node listens for the multicast vision messages sent by ssl-vision and publi
 ##### Published Topics
 
 * ~/vision_messages
-   * Type: [ssl_league_msgs/msg/VisionWrapper](/blob/main/ssl_league_msgs/msg/vision/VisionWrapper.msg)
+   * Type: [ssl_league_msgs/msg/VisionWrapper](ssl_league_msgs/msg/vision/VisionWrapper.msg)
    * Contains vision data including robot detections, ball detections, and field geometry.
 
 ##### Parameters
@@ -76,19 +76,19 @@ The team client node needs to know the IP address fo the game controller server 
 ##### Published Topics
 
 * ~/referee_messages
-  * Type: [ssl_league_msgs/msg/Referee](/blob/main/ssl_league_msgs/msg/game_controller/Referee.msg)
+  * Type: [ssl_league_msgs/msg/Referee](ssl_league_msgs/msg/game_controller/Referee.msg)
   * Contains the latest information from the game controller.
 
 ##### Subscribed Topics
 
 * /team_client_node/connection_status
-  * Type: [ssl_ros_bridge_msgs/msg/TeamClientConnectionStatus](/blob/main/ssl_ros_bridge_msgs/msg/TeamClientConnectionStatus.msg)
+  * Type: [ssl_ros_bridge_msgs/msg/TeamClientConnectionStatus](ssl_ros_bridge_msgs/msg/TeamClientConnectionStatus.msg)
   * Used for automatic game controller discovery.
 
 ##### Service Clients
 
 * /team_client_node/reconnect
-  * Type: [ssl_ros_bridge_msgs/srv/ReconnectTeamClient](/blob/main/ssl_ros_bridge_msgs/srv/ReconnectTeamClient.srv)
+  * Type: [ssl_ros_bridge_msgs/srv/ReconnectTeamClient](ssl_ros_bridge_msgs/srv/ReconnectTeamClient.srv)
   * Used for automatic game controller discovery.
 
 ##### Parameters
@@ -115,23 +115,23 @@ _Note_: Encrypted connections are not currently supported.
 ##### Published Topics
 
 * ~/connection_status
-  * Type: [ssl_ros_bridge_msgs/msg/TeamClientConnectionStatus](/blob/main/ssl_ros_bridge_msgs/msg/TeamClientConnectionStatus.msg)
+  * Type: [ssl_ros_bridge_msgs/msg/TeamClientConnectionStatus](ssl_ros_bridge_msgs/msg/TeamClientConnectionStatus.msg)
   * Contains the connection status and ping time of the team client to the game controller server.
 
 ##### Services
 
 * ~/set_desired_keeper
-  * Type: [ssl_ros_bridge_msgs/srv/](/blob/main/ssl_ros_bridge_msgs/srv/SetDesiredKeeper.srv)
+  * Type: [ssl_ros_bridge_msgs/srv/](ssl_ros_bridge_msgs/srv/SetDesiredKeeper.srv)
   * Sends a request to the game controller to change your team's keeper ID.
 * ~/substitute_bot
-  * Type: [ssl_ros_bridge_msgs/srv/](/blob/main/ssl_ros_bridge_msgs/srv/SubstituteBot.srv)
+  * Type: [ssl_ros_bridge_msgs/srv/](ssl_ros_bridge_msgs/srv/SubstituteBot.srv)
   * Sends a request to the game controller to substitute a bot.
 * ~/reconnect
-  * Type: [ssl_ros_bridge_msgs/srv/](/blob/main/ssl_ros_bridge_msgs/srv/ReconnectTeamClient.srv)
+  * Type: [ssl_ros_bridge_msgs/srv/](ssl_ros_bridge_msgs/srv/ReconnectTeamClient.srv)
   * Reconnects the team client to the game controller.
   * _Note_: If the address field of the request is empty, the team client node will reconnect to the same server it was previously configured for. If the address field of the request is not empty, the `gc_ip_address` parameter will be overwritten with this new address.
 * ~/set_advantage_choice
-  * Type: [ssl_ros_bridge_msgs/srv/](/blob/main/ssl_ros_bridge_msgs/srv/SetTeamAdvantageChoice.srv)
+  * Type: [ssl_ros_bridge_msgs/srv/](ssl_ros_bridge_msgs/srv/SetTeamAdvantageChoice.srv)
   * Sends a request to set the team's advantage choice to the game controller.
 
 ##### Parameters
