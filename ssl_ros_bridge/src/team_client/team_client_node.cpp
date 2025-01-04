@@ -42,7 +42,7 @@ public:
 
     declare_parameter<std::string>("gc_ip_address", "");
     declare_parameter<uint16_t>("gc_port", 10008);
-    declare_parameter<std::string>("team_name", "A-Team");
+    declare_parameter<std::string>("team_name", "Test Team");
     declare_parameter<std::string>("team_color", "auto");
 
     set_desired_keeper_service_ = create_service<ssl_ros_bridge_msgs::srv::SetDesiredKeeper>(

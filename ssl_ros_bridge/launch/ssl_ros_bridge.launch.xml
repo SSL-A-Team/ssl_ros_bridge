@@ -1,0 +1,8 @@
+<launch>
+  <arg name="team_name" default="Test Team"/>
+  <node name="gc_multicast_bridge_node" pkg="ssl_ros_bridge" exec="gc_multicast_bridge_node" respawn="True" />
+  <node name="team_client_node" pkg="ssl_ros_bridge" exec="team_client_node" respawn="True">
+    <param name="team_name" value="$(var team_name)"/>
+  </node>
+  <node name="ssl_vision_bridge" pkg="ssl_ros_bridge" exec="vision_bridge_node" respawn="True" />
+</launch>

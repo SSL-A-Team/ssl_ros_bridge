@@ -12,6 +12,18 @@ The intended usage of these packages is to configure and run the nodes in the ss
 
 For most teams, in most scenarios, the only parameter that needs to be configured is the team name. Automatic discovery and multi-interface multicast listening will handle most common network setups.
 
+Two launch files are provided in ssl_ros_bridge for basic scenarios: [ssl_ros_bridge.launch.xml](ssl_ros_bridge/launch/ssl_ros_bridge.launch.xml) and [ssl_ros_bridge_localhost_only.launch.xml](ssl_ros_bridge/launch/ssl_ros_bridge_localhost_only.launch.xml). The first listens for multicast traffic on all interfaces. The localhost only launch file restricts the multicast listening to the loopback interface (127.0.0.1) and sets the game controller server address to 127.0.0.1. The localhost only launch file is useful when using simulation to prevent traffic from other simulation setups on the same network from interfering with your system.
+
+_Note_: You may need to enable multicast on the loopback interface as many linux environments have it disabled by default.
+
+Either of these launch files can be included in your own launch file, specifying your team name.
+
+```xml
+<include file="$(find-pkg-share ssl_ros_bridge)/launch/ssl_ros_bridge.launch.xml">
+  <arg name="team_name" value="Your Team Name" />
+</include>
+```
+
 ## Packages
 
 ### ssl_league_protobufs
@@ -146,7 +158,7 @@ _Note_: Encrypted connections are not currently supported.
   * The port on the game controller server the team client will connect to.
 * team_name
   * Type: string
-  * Default: "A-Team"
+  * Default: "Test Team"
   * The name of the team the client will try to connect as.
 * team_color
   * Type: string

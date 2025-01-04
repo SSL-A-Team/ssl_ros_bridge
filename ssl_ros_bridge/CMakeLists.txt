@@ -20,6 +20,11 @@ add_subdirectory(src/game_controller_bridge)
 add_subdirectory(src/team_client)
 add_subdirectory(src/vision_bridge)
 
+install(DIRECTORY
+  launch
+  DESTINATION share/${PROJECT_NAME}
+)
+
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
   ament_lint_auto_find_test_dependencies()
