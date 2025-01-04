@@ -121,17 +121,17 @@ _Note_: Encrypted connections are not currently supported.
 ##### Services
 
 * ~/set_desired_keeper
-  * Type: [ssl_ros_bridge_msgs/srv/](ssl_ros_bridge_msgs/srv/SetDesiredKeeper.srv)
+  * Type: [ssl_ros_bridge_msgs/srv/SetDesiredKeeper](ssl_ros_bridge_msgs/srv/SetDesiredKeeper.srv)
   * Sends a request to the game controller to change your team's keeper ID.
 * ~/substitute_bot
-  * Type: [ssl_ros_bridge_msgs/srv/](ssl_ros_bridge_msgs/srv/SubstituteBot.srv)
+  * Type: [ssl_ros_bridge_msgs/srv/SubstituteBot](ssl_ros_bridge_msgs/srv/SubstituteBot.srv)
   * Sends a request to the game controller to substitute a bot.
 * ~/reconnect
-  * Type: [ssl_ros_bridge_msgs/srv/](ssl_ros_bridge_msgs/srv/ReconnectTeamClient.srv)
+  * Type: [ssl_ros_bridge_msgs/srv/ReconnectTeamClient](ssl_ros_bridge_msgs/srv/ReconnectTeamClient.srv)
   * Reconnects the team client to the game controller.
   * _Note_: If the address field of the request is empty, the team client node will reconnect to the same server it was previously configured for. If the address field of the request is not empty, the `gc_ip_address` parameter will be overwritten with this new address.
 * ~/set_advantage_choice
-  * Type: [ssl_ros_bridge_msgs/srv/](ssl_ros_bridge_msgs/srv/SetTeamAdvantageChoice.srv)
+  * Type: [ssl_ros_bridge_msgs/srv/SetTeamAdvantageChoice](ssl_ros_bridge_msgs/srv/SetTeamAdvantageChoice.srv)
   * Sends a request to set the team's advantage choice to the game controller.
 
 ##### Parameters
@@ -155,4 +155,4 @@ _Note_: Encrypted connections are not currently supported.
 
 ## Contributing
 
-See [our contributing guidelines](blob/master/CONTRIBUTING.md) 
+See [our contributing guidelines](CONTRIBUTING.md) 
