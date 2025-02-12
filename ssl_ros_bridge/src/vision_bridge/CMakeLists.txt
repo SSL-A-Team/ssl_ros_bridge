@@ -1,6 +1,5 @@
 add_library(${PROJECT_NAME}_vision_bridge SHARED
   ssl_vision_bridge_node.cpp
-  message_conversions.cpp
 )
 target_include_directories(${PROJECT_NAME}_vision_bridge PRIVATE ..)
 ament_target_dependencies(${PROJECT_NAME}_vision_bridge

@@ -26,11 +26,10 @@
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp_components/register_node_macro.hpp>
 
+#include "core/message_conversion.hpp"
 #include "core/multicast_receiver.hpp"
 #include "core/protobuf_logging.hpp"
 #include <ssl_league_msgs/msg/vision_wrapper.hpp>
-
-#include "message_conversions.hpp"
 
 namespace ssl_ros_bridge::vision_bridge
 {
@@ -65,7 +64,7 @@ private:
     // But, if all but the last byte is used, it succeeds and at worst some
     // data is lost
     if (!vision_proto.ParseFromArray(buffer, bytes_received - 1)) {
-      vision_publisher_->publish(message_conversions::fromProto(vision_proto));
+      vision_publisher_->publish(message_conversion::fromProto(vision_proto));
     } else {
       RCLCPP_WARN(get_logger(), "Failed to parse vision protobuf packet");
     }
