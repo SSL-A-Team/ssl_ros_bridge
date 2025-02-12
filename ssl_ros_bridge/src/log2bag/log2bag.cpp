@@ -1,3 +1,23 @@
+// Copyright 2025 A Team
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+// THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
+
 #include <filesystem>
 #include <fstream>
 #include <rclcpp/rclcpp.hpp>
@@ -24,8 +44,10 @@ void WriteMessageIfExists(
   writer.write(serialized_msg, topic, type_name, time);
 }
 
-void PrintUsage() {
-  std::cout << R"(
+void PrintUsage()
+{
+  std::cout <<
+    R"(
 Usage: log2bag FILE
 Convert SSL log file to ROS bag.
 
@@ -33,7 +55,8 @@ FILE - The SSL log file to convert
 )";
 }
 
-void RenderProgressBar(uintmax_t bytes_read, uintmax_t bytes_total) {
+void RenderProgressBar(uintmax_t bytes_read, uintmax_t bytes_total)
+{
   constexpr auto bar_width = 20;
   const auto percent = (bytes_read * 100) / bytes_total;
   const auto num_filled_chars = (percent * bar_width) / 100;
