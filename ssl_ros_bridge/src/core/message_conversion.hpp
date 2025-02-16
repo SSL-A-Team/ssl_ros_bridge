@@ -1,4 +1,4 @@
-// Copyright 2024 A Team
+// Copyright 2025 A Team
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -18,22 +18,35 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef GAME_CONTROLLER_BRIDGE__MESSAGE_CONVERSIONS_HPP_
-#define GAME_CONTROLLER_BRIDGE__MESSAGE_CONVERSIONS_HPP_
+#ifndef CORE__MESSAGE_CONVERSION_HPP_
+#define CORE__MESSAGE_CONVERSION_HPP_
 
 #include <ssl_league_protobufs/ssl_gc_referee_message.pb.h>
 #include <ssl_league_protobufs/ssl_gc_game_event.pb.h>
 #include <ssl_league_protobufs/ssl_gc_common.pb.h>
 #include <ssl_league_protobufs/ssl_gc_geometry.pb.h>
+#include <ssl_league_protobufs/ssl_vision_detection.pb.h>
+#include <ssl_league_protobufs/ssl_vision_geometry.pb.h>
+#include <ssl_league_protobufs/ssl_vision_wrapper.pb.h>
 
 #include <ssl_league_msgs/msg/referee.hpp>
 #include <ssl_league_msgs/msg/team_info.hpp>
 #include <ssl_league_msgs/msg/division.hpp>
 #include <ssl_league_msgs/msg/robot_id.hpp>
 #include <ssl_league_msgs/msg/team.hpp>
+#include <ssl_league_msgs/msg/vision_detection_ball.hpp>
+#include <ssl_league_msgs/msg/vision_detection_robot.hpp>
+#include <ssl_league_msgs/msg/vision_detection_frame.hpp>
+#include <ssl_league_msgs/msg/vision_field_line_segment.hpp>
+#include <ssl_league_msgs/msg/vision_field_circular_arc.hpp>
+#include <ssl_league_msgs/msg/vision_geometry_field_size.hpp>
+#include <ssl_league_msgs/msg/vision_geometry_camera_calibration.hpp>
+#include <ssl_league_msgs/msg/vision_geometry_data.hpp>
+#include <ssl_league_msgs/msg/vision_wrapper.hpp>
+
 #include <geometry_msgs/msg/point32.hpp>
 
-namespace ssl_ros_bridge::game_controller_bridge::message_conversions
+namespace ssl_ros_bridge::message_conversion
 {
 
 geometry_msgs::msg::Point32 fromProto(const Vector2 & proto_msg);
@@ -106,6 +119,19 @@ ssl_league_msgs::msg::ChallengeFlagHandled fromProto(
 ssl_league_msgs::msg::ExcessiveBotSubstitution fromProto(
   const GameEvent_ExcessiveBotSubstitution & proto_msg);
 
-}  // namespace ssl_ros_bridge::game_controller_bridge::message_conversions
+ssl_league_msgs::msg::VisionDetectionBall fromProto(const SSL_DetectionBall & proto_msg);
+ssl_league_msgs::msg::VisionDetectionRobot fromProto(const SSL_DetectionRobot & proto_msg);
+ssl_league_msgs::msg::VisionDetectionFrame fromProto(const SSL_DetectionFrame & proto_msg);
 
-#endif  // GAME_CONTROLLER_BRIDGE__MESSAGE_CONVERSIONS_HPP_
+ssl_league_msgs::msg::VisionFieldLineSegment fromProto(const SSL_FieldLineSegment & proto_msg);
+ssl_league_msgs::msg::VisionFieldCircularArc fromProto(const SSL_FieldCircularArc & proto_msg);
+ssl_league_msgs::msg::VisionGeometryFieldSize fromProto(const SSL_GeometryFieldSize & proto_msg);
+ssl_league_msgs::msg::VisionGeometryCameraCalibration fromProto(
+  const SSL_GeometryCameraCalibration & proto_msg);
+ssl_league_msgs::msg::VisionGeometryData fromProto(const SSL_GeometryData & proto_msg);
+
+ssl_league_msgs::msg::VisionWrapper fromProto(const SSL_WrapperPacket & proto_msg);
+
+}  // namespace ssl_ros_bridge::message_conversion
+
+#endif  // CORE__MESSAGE_CONVERSION_HPP_

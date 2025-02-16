@@ -22,12 +22,12 @@
 #include <string>
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp_components/register_node_macro.hpp>
+#include "core/message_conversion.hpp"
 #include "core/multicast_receiver.hpp"
 #include "core/protobuf_logging.hpp"
 #include <ssl_ros_bridge_msgs/msg/team_client_connection_status.hpp>
 #include <ssl_ros_bridge_msgs/srv/reconnect_team_client.hpp>
 #include <ssl_league_msgs/msg/referee.hpp>
-#include "message_conversions.hpp"
 
 namespace ssl_ros_bridge::game_controller_bridge
 {
@@ -86,7 +86,7 @@ private:
       RCLCPP_WARN(get_logger(), "Failed to parse referee protobuf packet");
       return;
     }
-    referee_publisher_->publish(message_conversions::fromProto(referee_proto));
+    referee_publisher_->publish(message_conversion::fromProto(referee_proto));
     if(team_client_connected_ || !reconnect_client_->service_is_ready()) {
       return;
     }

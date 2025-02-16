@@ -8,6 +8,8 @@ This repo is designed to be built in a colcon workspace. You can clone this repo
 
 ## Usage
 
+### Bridge Nodes
+
 The intended usage of these packages is to configure and run the nodes in the ssl_ros_bridge package alongside your own nodes. Each node is provided as a component with a standalone executable available. Either can be used.
 
 For most teams, in most scenarios, the only parameter that needs to be configured is the team name. Automatic discovery and multi-interface multicast listening will handle most common network setups.
@@ -25,6 +27,18 @@ Either of these launch files can be included in your own launch file, specifying
   <arg name="team_name" value="Your Team Name" />
 </include>
 ```
+
+### log2bag
+
+The ssl_ros_bridge package also provides the `log2bag` executable for converting [SSL game logs](https://ssl.robocup.org/game-logs/) to ROS bags. The output bag file will have the same name as the log file (without the .log extension).
+
+```shell
+ros2 run ssl_ros_bridge log2bag /path/to/game/log.log
+```
+
+> **Note**
+>
+> log2bag does not currently support compressed logs (*.log.gz). You can do this with `gunzip -k LogFile.log.gz`.
 
 ## Packages
 

@@ -1,6 +1,5 @@
 add_library(${PROJECT_NAME}_game_controller_bridge SHARED
     gc_multicast_bridge_node.cpp
-    message_conversions.cpp
 )
 target_include_directories(${PROJECT_NAME}_game_controller_bridge PRIVATE ..)
 ament_target_dependencies(${PROJECT_NAME}_game_controller_bridge
