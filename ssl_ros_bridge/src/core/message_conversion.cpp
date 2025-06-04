@@ -36,7 +36,9 @@
 
 #define CopyOptionalEnum(proto_msg, ros_msg, var_name) \
   if (proto_msg.has_ ## var_name() ) { \
-    ros_msg.var_name = { static_cast<decltype(ros_msg.var_name)::value_type>(proto_msg.var_name()) }; \
+    ros_msg.var_name = { \
+      static_cast<decltype(ros_msg.var_name)::value_type>(proto_msg.var_name()) \
+    }; \
   }
 
 constexpr float mmTom = 1.0e-3f;
@@ -78,7 +80,7 @@ ssl_league_msgs::msg::Referee fromProto(const Referee & proto_msg)
     geometry_msgs::msg::Point32 p;
     p.x = proto_msg.designated_position().x() / 1e3;
     p.y = proto_msg.designated_position().y() / 1e3;
-    ros_msg.designated_position = { p };
+    ros_msg.designated_position = {p};
   }
   CopyOptional(proto_msg, ros_msg, blue_team_on_positive_half);
   CopyOptionalEnum(proto_msg, ros_msg, next_command);
