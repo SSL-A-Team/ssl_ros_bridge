@@ -36,7 +36,7 @@
 
 #define CopyOptionalEnum(proto_msg, ros_msg, var_name) \
   if (proto_msg.has_ ## var_name() ) { \
-    ros_msg.var_name = { static_cast<decltype(ros_msg.var_name)>(proto_msg.var_name()) }; \
+    ros_msg.var_name = { static_cast<decltype(ros_msg.var_name)::value_type>(proto_msg.var_name()) }; \
   }
 
 constexpr float mmTom = 1.0e-3f;
