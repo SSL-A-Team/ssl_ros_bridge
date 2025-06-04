@@ -1,21 +1,20 @@
-string source_identifier
-uint8 match_type
+string[] source_identifier
+uint8[] match_type
 builtin_interfaces/Time timestamp
 uint8 stage
-int64 stage_time_left
+int64[] stage_time_left
 uint8 command
 uint32 command_counter
 builtin_interfaces/Time command_timestamp
 ssl_league_msgs/TeamInfo yellow
 ssl_league_msgs/TeamInfo blue
-geometry_msgs/Point32 designated_position
-bool blue_team_on_positive_half
-uint8 next_command
+geometry_msgs/Point32[] designated_position
+bool[] blue_team_on_positive_half
+uint8[] next_command
 ssl_league_msgs/GameEvent[] game_events
 ssl_league_msgs/GameEventProposalGroup[] game_event_proposals
-int64 current_action_time_remaining
-string status_message
-
+int64[] current_action_time_remaining
+string[] status_message
 
 # Match Types
 uint8 MATCH_TYPE_UNKNOWN_MATCH = 0

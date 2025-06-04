@@ -34,6 +34,13 @@
     ros_msg.var_name = {fromProto(proto_msg.var_name())}; \
   }
 
+#define CopyOptionalEnum(proto_msg, ros_msg, var_name) \
+  if (proto_msg.has_ ## var_name() ) { \
+    ros_msg.var_name = { \
+      static_cast<decltype(ros_msg.var_name)::value_type>(proto_msg.var_name()) \
+    }; \
+  }
+
 constexpr float mmTom = 1.0e-3f;
 constexpr int secToNanosec = 1e9;
 
@@ -59,20 +66,24 @@ geometry_msgs::msg::Point32 fromProto(const Vector3 & proto_msg)
 ssl_league_msgs::msg::Referee fromProto(const Referee & proto_msg)
 {
   ssl_league_msgs::msg::Referee ros_msg;
-  ros_msg.source_identifier = proto_msg.source_identifier();
-  ros_msg.match_type = proto_msg.match_type();
+  CopyOptional(proto_msg, ros_msg, source_identifier);
+  CopyOptionalEnum(proto_msg, ros_msg, match_type);
   ros_msg.timestamp = rclcpp::Time(proto_msg.packet_timestamp() * 1000);
   ros_msg.stage = proto_msg.stage();
-  ros_msg.stage_time_left = proto_msg.stage_time_left();
+  CopyOptional(proto_msg, ros_msg, stage_time_left);
   ros_msg.command = proto_msg.command();
   ros_msg.command_counter = proto_msg.command_counter();
   ros_msg.command_timestamp = rclcpp::Time(proto_msg.command_timestamp() * 1000);
   ros_msg.yellow = fromProto(proto_msg.yellow());
   ros_msg.blue = fromProto(proto_msg.blue());
-  ros_msg.designated_position.x = proto_msg.designated_position().x() / 1000.0;
-  ros_msg.designated_position.y = proto_msg.designated_position().y() / 1000.0;
-  ros_msg.blue_team_on_positive_half = proto_msg.blue_team_on_positive_half();
-  ros_msg.next_command = proto_msg.next_command();
+  if(proto_msg.has_designated_position()) {
+    geometry_msgs::msg::Point32 p;
+    p.x = proto_msg.designated_position().x() / 1e3;
+    p.y = proto_msg.designated_position().y() / 1e3;
+    ros_msg.designated_position = {p};
+  }
+  CopyOptional(proto_msg, ros_msg, blue_team_on_positive_half);
+  CopyOptionalEnum(proto_msg, ros_msg, next_command);
   std::transform(
     proto_msg.game_events().begin(),
     proto_msg.game_events().end(),
@@ -83,8 +94,8 @@ ssl_league_msgs::msg::Referee fromProto(const Referee & proto_msg)
     proto_msg.game_event_proposals().end(),
     std::back_inserter(ros_msg.game_event_proposals),
     [](const auto & p) {return fromProto(p);});
-  ros_msg.current_action_time_remaining = proto_msg.current_action_time_remaining();
-  ros_msg.status_message = proto_msg.status_message();
+  CopyOptional(proto_msg, ros_msg, current_action_time_remaining);
+  CopyOptional(proto_msg, ros_msg, status_message);
   return ros_msg;
 }
 
@@ -101,15 +112,15 @@ ssl_league_msgs::msg::TeamInfo fromProto(const Referee::TeamInfo & proto_msg)
   ros_msg.timeouts = proto_msg.timeouts();
   ros_msg.timeout_time = proto_msg.timeout_time();
   ros_msg.goalkeeper = proto_msg.goalkeeper();
-  ros_msg.foul_counter = proto_msg.foul_counter();
-  ros_msg.ball_placement_failures = proto_msg.ball_placement_failures();
-  ros_msg.can_place_ball = proto_msg.can_place_ball();
-  ros_msg.max_allowed_bots = proto_msg.max_allowed_bots();
-  ros_msg.bot_substitution_intent = proto_msg.bot_substitution_intent();
-  ros_msg.ball_placement_failures_reached = proto_msg.ball_placement_failures_reached();
-  ros_msg.bot_substitution_allowed = proto_msg.bot_substitution_allowed();
-  ros_msg.bot_substitutions_left = proto_msg.bot_substitutions_left();
-  ros_msg.bot_substitution_time_left = proto_msg.bot_substitution_time_left();
+  CopyOptional(proto_msg, ros_msg, foul_counter);
+  CopyOptional(proto_msg, ros_msg, ball_placement_failures);
+  CopyOptional(proto_msg, ros_msg, can_place_ball);
+  CopyOptional(proto_msg, ros_msg, max_allowed_bots);
+  CopyOptional(proto_msg, ros_msg, bot_substitution_intent);
+  CopyOptional(proto_msg, ros_msg, ball_placement_failures_reached);
+  CopyOptional(proto_msg, ros_msg, bot_substitution_allowed);
+  CopyOptional(proto_msg, ros_msg, bot_substitutions_left);
+  CopyOptional(proto_msg, ros_msg, bot_substitution_time_left);
   return ros_msg;
 }
 
@@ -165,6 +176,7 @@ ssl_league_msgs::msg::GameEvent fromProto(const GameEvent & proto_msg)
 ssl_league_msgs::msg::GameEventProposalGroup fromProto(const GameEventProposalGroup & proto_msg)
 {
   ssl_league_msgs::msg::GameEventProposalGroup ros_msg;
+  CopyOptional(proto_msg, ros_msg, id);
   std::transform(
     proto_msg.game_events().begin(),
     proto_msg.game_events().end(),
