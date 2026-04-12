@@ -35,6 +35,7 @@ std::vector<std::string> GetIpAdresses(const bool include_ipv6)
   auto iface_info_current = iface_info;
   while(iface_info_current != nullptr) {
     if(!iface_info_current->ifa_addr) {
+      iface_info_current = iface_info_current->ifa_next;
       continue;
     }
 
