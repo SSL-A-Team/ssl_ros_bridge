@@ -15,4 +15,5 @@ target_link_libraries(${PROJECT_NAME}_core
   Boost::boost
   protobuf::libprotobuf
 )
+target_compile_features(${PROJECT_NAME}_core PUBLIC cxx_std_20)
 install(TARGETS ${PROJECT_NAME}_core DESTINATION lib)
