@@ -2,6 +2,8 @@
 
 This repository provides ROS 2 packages containing utilities for connecting your ROS system to the RoboCup Small Size League (SSL) standard systems, such as ssl-vision and the Game Controller.
 
+🏆 Winner of the 2025 RoboCup Small Size League [Open Source Award](https://ssl.robocup.org/robocups/robocup-2025/robocup-2025-results/)!
+
 ## Installation
 
 This repo is designed to be built in a colcon workspace. You can clone this repo alongside your own code or as a submodule within your own repository.
