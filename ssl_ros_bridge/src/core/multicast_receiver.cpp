@@ -42,15 +42,15 @@ MulticastReceiver::MulticastReceiver(
   uint16_t multicast_port,
   ReceiveCallback receive_callback,
   std::string interface_address,
-  LogHandler warning_handler_)
+  LogHandler warning_handler)
 : receive_callback_(receive_callback),
-  warning_handler_(warning_handler_),
+  warning_handler_(warning_handler),
   multicast_socket_(io_service_)
 {
   if (warning_handler_ == nullptr) {
     warning_handler_ = [this](const std::string & message) {
-      LogToStdCerr(message);
-    };
+        LogToStdCerr(message);
+      };
   }
   const auto multicast_address = boost::asio::ip::make_address(multicast_address_string).to_v4();
   const boost::asio::ip::udp::endpoint multicast_endpoint(multicast_address, multicast_port);

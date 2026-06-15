@@ -42,7 +42,7 @@ public:
     std::function<void (const std::string & sender_address, const uint16_t sender_port,
       uint8_t * data, size_t data_length)>;
 
-  using LogHandler = 
+  using LogHandler =
     std::function<void (const std::string & message)>;
 
   MulticastReceiver(
@@ -50,7 +50,7 @@ public:
     uint16_t multicast_port,
     ReceiveCallback receive_callback,
     std::string interface_address = "",
-    LogHandler warning_handler_ = nullptr);
+    LogHandler warning_handler = nullptr);
 
   ~MulticastReceiver();
 
