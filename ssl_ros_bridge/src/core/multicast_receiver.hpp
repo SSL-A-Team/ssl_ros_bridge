@@ -21,6 +21,7 @@
 #ifndef CORE__MULTICAST_RECEIVER_HPP_
 #define CORE__MULTICAST_RECEIVER_HPP_
 
+#include <format>
 #include <functional>
 #include <string>
 
@@ -41,11 +42,15 @@ public:
     std::function<void (const std::string & sender_address, const uint16_t sender_port,
       uint8_t * data, size_t data_length)>;
 
+  using LogHandler =
+    std::function<void (const std::string & message)>;
+
   MulticastReceiver(
     std::string multicast_ip_address,
     uint16_t multicast_port,
     ReceiveCallback receive_callback,
-    std::string interface_address = "");
+    std::string interface_address = "",
+    LogHandler warning_handler = nullptr);
 
   ~MulticastReceiver();
 
@@ -55,6 +60,7 @@ public:
 
 private:
   ReceiveCallback receive_callback_;
+  LogHandler warning_handler_;
   boost::asio::io_service io_service_;
   boost::asio::ip::udp::socket multicast_socket_;
   boost::asio::ip::udp::endpoint sender_endpoint_;
@@ -67,6 +73,8 @@ private:
   void HandleUDPSendTo(const boost::system::error_code & error, size_t bytes_sent);
 
   void JoinMulticastGroupOnAllV4Interfaces(const boost::asio::ip::address & multicast_address);
+
+  void LogToStdCerr(const std::string & message);
 };
 
 }  // namespace ssl_ros_bridge::core

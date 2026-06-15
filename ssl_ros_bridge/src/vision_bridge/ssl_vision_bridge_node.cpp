@@ -46,7 +46,10 @@ public:
       declare_parameter<int>("ssl_vision_port", 10020),
       std::bind(&SSLVisionBridgeNode::multicastCallback, this, std::placeholders::_3,
       std::placeholders::_4),
-      declare_parameter<std::string>("net_interface_address", ""))
+      declare_parameter<std::string>("net_interface_address", ""),
+      [this](const std::string & message) {
+        RCLCPP_WARN(get_logger(), "%s", message.c_str());
+      })
   {
     SET_ROS_PROTOBUF_LOG_HANDLER("ssl_vision_bridge.protobuf");
   }

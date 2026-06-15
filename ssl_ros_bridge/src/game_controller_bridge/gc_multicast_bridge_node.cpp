@@ -63,7 +63,10 @@ public:
       multicast_port,
         std::bind(&GCMulticastBridgeNode::PublishMulticastMessage, this, std::placeholders::_1,
         std::placeholders::_3, std::placeholders::_4),
-      declare_parameter<std::string>("net_interface_address", ""));
+      declare_parameter<std::string>("net_interface_address", ""),
+      [this](const std::string & message) {
+        RCLCPP_WARN(get_logger(), "%s", message.c_str());
+      });
   }
 
 private:

@@ -41,10 +41,17 @@ MulticastReceiver::MulticastReceiver(
   std::string multicast_address_string,
   uint16_t multicast_port,
   ReceiveCallback receive_callback,
-  std::string interface_address)
+  std::string interface_address,
+  LogHandler warning_handler)
 : receive_callback_(receive_callback),
+  warning_handler_(warning_handler),
   multicast_socket_(io_service_)
 {
+  if (warning_handler_ == nullptr) {
+    warning_handler_ = [this](const std::string & message) {
+        LogToStdCerr(message);
+      };
+  }
   const auto multicast_address = boost::asio::ip::make_address(multicast_address_string).to_v4();
   const boost::asio::ip::udp::endpoint multicast_endpoint(multicast_address, multicast_port);
   multicast_socket_.open(multicast_endpoint.protocol());
@@ -63,16 +70,25 @@ MulticastReceiver::MulticastReceiver(
         /* Ignore "address already in use" exceptions. This just indicates multiple addresses
          * assigned to the same interface.
          */
-        if(e.code().value() != EADDRINUSE) {
-          boost::rethrow_exception(boost::current_exception());
+        if(e.code().value() == EADDRINUSE) {
+          continue;
         }
+        warning_handler_(std::format(
+          "Failed to join multicast group on interface with address {}: {}",
+          address, e.what()));
       }
     }
   } else {
-    multicast_socket_.set_option(
-      boost::asio::ip::multicast::join_group(
-        multicast_address,
-        boost::asio::ip::make_address_v4(interface_address)));
+    try {
+      multicast_socket_.set_option(
+        boost::asio::ip::multicast::join_group(
+          multicast_address,
+          boost::asio::ip::make_address_v4(interface_address)));
+    } catch (const boost::system::system_error & e) {
+      warning_handler_(std::format(
+        "Failed to join multicast group on interface with address {}: {}",
+        interface_address, e.what()));
+    }
   }
   multicast_socket_.async_receive_from(
     boost::asio::buffer(buffer_), sender_endpoint_,
@@ -99,8 +115,7 @@ void MulticastReceiver::SendTo(
   const char * const data, const size_t length)
 {
   if (length >= send_buffer_.size()) {
-    std::cout << "WARNING: UDP send data length is larger than buffer" << std::endl;
-
+    warning_handler_("Cannot send data. UDP send data length is larger than buffer.");
     return;
   }
 
@@ -124,7 +139,7 @@ void MulticastReceiver::HandleMulticastReceiveFrom(
   size_t bytes_received)
 {
   if (error) {
-    std::cerr << "Receive from error: " << error.message() << std::endl;
+    warning_handler_(std::format("Failure while receiving data: {}", error.message()));
     return;
   }
 
@@ -143,8 +158,13 @@ void MulticastReceiver::HandleMulticastReceiveFrom(
 void MulticastReceiver::HandleUDPSendTo(const boost::system::error_code & error, size_t)
 {
   if (error) {
-    std::cerr << "Error sending UDP data: " << error.message() << std::endl;
+    warning_handler_(std::format("Failure while sending UDP data: {}", error.message()));
   }
+}
+
+void MulticastReceiver::LogToStdCerr(const std::string & message)
+{
+  std::cerr << "WARNING: " << message << std::endl;
 }
 
 }  // namespace ssl_ros_bridge::core
