@@ -24,6 +24,8 @@ message RobotMoveCommand {
         MoveLocalVelocity local_velocity = 2;
         // Move with global velocity
         MoveGlobalVelocity global_velocity = 3;
+        // Track a global trajectory reference (A-Team extension)
+        MoveGlobalTrajectoryReference global_trajectory_reference = 4;
     }
 }
 
@@ -57,6 +59,33 @@ message MoveGlobalVelocity {
     required float y = 2;
     // Angular velocity counter-clockwise [rad/s]
     required float angular = 3;
+}
+
+// Track a global trajectory reference (A-Team extension).
+// The simulator drives the robot with a feedforward + PD control law evaluated
+// against the robot's ground-truth state:
+//   accel = accel_ff + Kp * (pos_ref - pos_true) + Kd * (vel_ref - vel_true)
+// This faithfully mirrors the robot firmware's trajectory tracking without
+// depending on the (delayed) vision pose for the global->local conversion.
+message MoveGlobalTrajectoryReference {
+    // Reference position on x-axis of the field [m]
+    required float x = 1;
+    // Reference position on y-axis of the field [m]
+    required float y = 2;
+    // Reference orientation counter-clockwise [rad]
+    required float theta = 3;
+    // Reference velocity on x-axis of the field [m/s]
+    required float vx = 4;
+    // Reference velocity on y-axis of the field [m/s]
+    required float vy = 5;
+    // Reference angular velocity counter-clockwise [rad/s]
+    required float vangular = 6;
+    // Feedforward acceleration on x-axis of the field [m/s^2]
+    optional float ax = 7 [default = 0];
+    // Feedforward acceleration on y-axis of the field [m/s^2]
+    optional float ay = 8 [default = 0];
+    // Feedforward angular acceleration counter-clockwise [rad/s^2]
+    optional float aangular = 9 [default = 0];
 }
 
 // Command from the connected client to the simulator
