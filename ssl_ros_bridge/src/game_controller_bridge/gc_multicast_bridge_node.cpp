@@ -53,7 +53,7 @@ public:
         std::placeholders::_1));
 
     const auto multicast_address =
-      declare_parameter<std::string>("multicast.address", "224.5.23.1");
+      declare_parameter<std::string>("multicast.address", "255.255.255.255");
     const auto multicast_port = declare_parameter<int>("multicast.port", 10003);
     RCLCPP_INFO(
       get_logger(), "Listening for multicast packets at %s:%ld",
