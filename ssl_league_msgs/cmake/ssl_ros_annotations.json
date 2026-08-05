@@ -1,0 +1,190 @@
+{
+  "_comment": "Sidecar annotation file for SSL league proto → ROS2 msg generation.",
+  "_schema": {
+    "fields": "Map of proto_field_name → annotation. Consumed by the annotation; not emitted as passthrough.",
+    "outputs": "List of multi-field → single ROS struct rules. All proto fields referenced in 'from' (or nested position/orientation 'from') are consumed.",
+    "from": "Map of ros_component_name → proto_field_name (direction: proto → ROS).",
+    "scale": "Multiply all consumed scalar components by this factor (metadata; applied at bridge layer).",
+    "ros_type": "Override emitted ROS type. Required for builtin_interfaces/Time and /Duration (triggers intrinsic conversion based on proto wire type: float/double → from_seconds, int/uint → from_microseconds).",
+    "ros_field": "Override output field name. Omit to keep proto field name.",
+    "conversion_func": "Reserved for future user-supplied conversions. Only intrinsic conversions (Time/Duration) are supported now; generator errors on any user-supplied value."
+  },
+
+  "SSL_DetectionBall": {
+    "outputs": [
+      {
+        "ros_field": "pos",
+        "ros_type": "geometry_msgs/Point32",
+        "from": { "x": "x", "y": "y", "z": "z" },
+        "scale": 1e-3,
+        "_consumed": ["x", "y", "z"],
+        "_comment": "World position in mm → m"
+      },
+      {
+        "ros_field": "pixel",
+        "ros_type": "geometry_msgs/Point32",
+        "from": { "x": "pixel_x", "y": "pixel_y" },
+        "_consumed": ["pixel_x", "pixel_y"],
+        "_comment": "Image-space pixel coordinates, no scale"
+      }
+    ]
+  },
+
+  "SSL_DetectionRobot": {
+    "outputs": [
+      {
+        "ros_field": "pos",
+        "ros_type": "geometry_msgs/Point32",
+        "from": { "x": "x", "y": "y" },
+        "scale": 1e-3,
+        "_consumed": ["x", "y"],
+        "_comment": "World position in mm → m; z omitted (2D system)"
+      },
+      {
+        "ros_field": "pixel",
+        "ros_type": "geometry_msgs/Point32",
+        "from": { "x": "pixel_x", "y": "pixel_y" },
+        "_consumed": ["pixel_x", "pixel_y"]
+      }
+    ],
+    "fields": {
+      "height": { "scale": 1e-3 }
+    }
+  },
+
+  "SSL_DetectionFrame": {
+    "fields": {
+      "t_capture":        { "ros_type": "builtin_interfaces/Time" },
+      "t_sent":           { "ros_type": "builtin_interfaces/Time" },
+      "t_capture_camera": { "ros_type": "builtin_interfaces/Time" }
+    }
+  },
+
+  "SSL_GeometryCameraCalibration": {
+    "outputs": [
+      {
+        "ros_field": "pose",
+        "ros_type": "geometry_msgs/Pose",
+        "position": {
+          "from": { "x": "tx", "y": "ty", "z": "tz" },
+          "scale": 1e-3,
+          "_comment": "Camera translation in mm → m"
+        },
+        "orientation": {
+          "from": { "x": "q0", "y": "q1", "z": "q2", "w": "q3" },
+          "_comment": "SSL convention: q0=x q1=y q2=z q3=w (non-standard order)"
+        },
+        "_consumed": ["tx", "ty", "tz", "q0", "q1", "q2", "q3"]
+      },
+      {
+        "ros_field": "principal_point",
+        "ros_type": "geometry_msgs/Point32",
+        "from": { "x": "principal_point_x", "y": "principal_point_y" },
+        "_consumed": ["principal_point_x", "principal_point_y"]
+      },
+      {
+        "ros_field": "derived_camera_world_t",
+        "ros_type": "geometry_msgs/Point32",
+        "from": { "x": "derived_camera_world_tx", "y": "derived_camera_world_ty", "z": "derived_camera_world_tz" },
+        "scale": 1e-3,
+        "_consumed": ["derived_camera_world_tx", "derived_camera_world_ty", "derived_camera_world_tz"]
+      }
+    ]
+  },
+
+  "SSL_GeometryFieldSize": {
+    "fields": {
+      "field_length":                 { "scale": 1e-3, "ros_type": "float32" },
+      "field_width":                  { "scale": 1e-3, "ros_type": "float32" },
+      "goal_width":                   { "scale": 1e-3, "ros_type": "float32" },
+      "goal_depth":                   { "scale": 1e-3, "ros_type": "float32" },
+      "boundary_width":               { "scale": 1e-3, "ros_type": "float32" },
+      "penalty_area_depth":           { "scale": 1e-3, "ros_type": "float32" },
+      "penalty_area_width":           { "scale": 1e-3, "ros_type": "float32" },
+      "center_circle_radius":         { "scale": 1e-3, "ros_type": "float32" },
+      "line_thickness":               { "scale": 1e-3, "ros_type": "float32" },
+      "goal_center_to_penalty_mark":  { "scale": 1e-3, "ros_type": "float32" },
+      "goal_height":                  { "scale": 1e-3, "ros_type": "float32" },
+      "ball_radius":                  { "scale": 1e-3 },
+      "max_robot_radius":             { "scale": 1e-3 }
+    }
+  },
+
+  "SSL_FieldCircularArc": {
+    "fields": {
+      "radius":    { "scale": 1e-3 },
+      "thickness": { "scale": 1e-3 }
+    }
+  },
+
+  "SSL_FieldLineSegment": {
+    "fields": {
+      "thickness": { "scale": 1e-3 }
+    }
+  },
+
+  "Vector2f": {
+    "fields": {
+      "x": { "scale": 1e-3 },
+      "y": { "scale": 1e-3 }
+    }
+  },
+
+  "SSL_GeometryData": {
+    "fields": {
+      "calib": { "ros_field": "calibration" }
+    }
+  },
+
+  "Referee": {
+    "fields": {
+      "packet_timestamp":               { "ros_type": "builtin_interfaces/Time" },
+      "command_timestamp":              { "ros_type": "builtin_interfaces/Time" },
+      "stage_time_left":                { "ros_type": "builtin_interfaces/Duration" },
+      "current_action_time_remaining":  { "ros_type": "builtin_interfaces/Duration" }
+    }
+  },
+
+  "Referee_Point": {
+    "fields": {
+      "x": { "scale": 1e-3 },
+      "y": { "scale": 1e-3 }
+    }
+  },
+
+  "KeeperHeldBall": {
+    "fields": {
+      "duration": { "ros_type": "builtin_interfaces/Duration" }
+    }
+  },
+
+  "BotHeldBallDeliberately": {
+    "fields": {
+      "duration": { "ros_type": "builtin_interfaces/Duration" }
+    }
+  },
+
+  "KickTimeout": {
+    "fields": {
+      "time": { "ros_type": "builtin_interfaces/Duration" }
+    }
+  },
+
+  "NoProgressInGame": {
+    "fields": {
+      "time": { "ros_type": "builtin_interfaces/Duration" }
+    }
+  },
+
+  "PlacementSucceeded": {
+    "fields": {
+      "time_taken": { "ros_type": "builtin_interfaces/Duration" }
+    }
+  },
+
+  "Prepared": {
+    "fields": {
+      "time_taken": { "ros_type": "builtin_interfaces/Duration" }
+    }
+  }
+}
