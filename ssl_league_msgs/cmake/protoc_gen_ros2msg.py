@@ -107,9 +107,11 @@ def ros2_field_type(field: descriptor_pb2.FieldDescriptorProto) -> str:
     if field.type in SCALAR_TYPE_MAP:
         return SCALAR_TYPE_MAP[field.type]
     if field.type == FD.TYPE_ENUM:
-        return "int32"
+        return "int8"
     if field.type == FD.TYPE_MESSAGE:
-        return flatten_type_name(field.type_name)
+        if field.type_name == ".google.protobuf.Any":
+            raise ValueError("Fields with type 'Any' are not supported.")
+        return flatten_type_name(field.type_name).replace("SSL_", "")
     raise ValueError(f"unhandled proto field type {field.type} in field '{field.name}'")
 
 
@@ -127,13 +129,6 @@ def iter_enums(fd):
 
     for msg in fd.message_type:
         yield from _walk(msg, "")
-
-
-def generate_enum_msg(enum: descriptor_pb2.EnumDescriptorProto) -> str:
-    lines = [f"# Generated from proto enum {enum.name}"]
-    for v in enum.value:
-        lines.append(f"int32 {v.name}={v.number}")
-    return "\n".join(lines) + "\n"
 
 
 # ---------------------------------------------------------------------------
@@ -265,7 +260,17 @@ def generate_message_msg(
     # 2. Sidecar field overrides (single-field with ros_type / ros_field / scale).
     _emit_sidecar_fields(sidecar_entry, proto_field_map, lines, proto2, errors, flat_name)
 
-    # 3. Passthrough: proto fields not consumed by the sidecar.
+    # 3. Enum value constants
+
+    for enum in msg.enum_type:
+        for value in enum.value:
+            constant_name = enum.name.upper() + "_" + value.name.upper()
+            constant_value = value.number
+            lines.append(f"uint8 {constant_name} = {constant_value}")
+
+    lines.append("\n")
+
+    # 4. Passthrough: proto fields not consumed by the sidecar.
     emitted_oneofs: set = set()
 
     for field in msg.field:
@@ -366,11 +371,6 @@ def main() -> None:
 
     for file_name in request.file_to_generate:
         fd = all_files[file_name]
-
-        for flat_name, enum in iter_enums(fd):
-            out = response.file.add()
-            out.name = f"{flat_name}.msg"
-            out.content = generate_enum_msg(enum)
 
         proto2 = (fd.syntax != "proto3")
         for flat_name, msg in iter_messages(fd):

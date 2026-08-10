@@ -28,9 +28,7 @@ def flatten_type_name(type_name: str) -> str:
         .GameEvent.BallLeftField          → GameEvent_BallLeftField
         .ateam_test.OuterMessage.Inner    → OuterMessage_Inner
     """
-    parts = type_name.lstrip(".").split(".")
-    type_parts = [p for p in parts if p and p[0].isupper()]
-    return "_".join(type_parts) if type_parts else parts[-1]
+    return type_name.lstrip(".").split(".")[-1]
 
 
 # Alias preserved for callers that import the name directly.
@@ -59,7 +57,8 @@ def build_map_entry_type_names(request) -> frozenset:
 def iter_messages(fd):
     """Yield (flat_name, msg) for all non-map-entry messages in fd, including nested."""
     def _walk(msg, parent_flat: str):
-        flat = f"{parent_flat}_{msg.name}" if parent_flat else msg.name
+        flat = f"{msg.name}" if parent_flat else msg.name
+        flat = flat.replace("SSL_", "")
         if not msg.options.map_entry:
             yield flat, msg
         for nested in msg.nested_type:

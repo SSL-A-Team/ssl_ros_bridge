@@ -21,7 +21,6 @@ generate_ros2_msgs(
     ${_PROTO_DIR}/ssl_vision_geometry.proto
     ${_PROTO_DIR}/ssl_vision_wrapper.proto
     ${_PROTO_DIR}/ssl_simulation_control.proto
-    ${_PROTO_DIR}/ssl_simulation_config.proto
     ${_PROTO_DIR}/ssl_simulation_error.proto
   PROTO_PATHS
     ${_PROTO_DIR}

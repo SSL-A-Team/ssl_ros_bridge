@@ -68,7 +68,7 @@ function(generate_ros2_msgs)
 
   # --- Plugin path (sibling of this .cmake file) ---
   get_filename_component(_CMAKE_DIR "${CMAKE_CURRENT_LIST_FILE}" DIRECTORY)
-  set(_PLUGIN_SRC "${_CMAKE_DIR}/protoc_gen_ros2msg.py")
+  set(_PLUGIN_SRC "${_CMAKE_DIR}/cmake/protoc_gen_ros2msg.py")
 
   if(NOT EXISTS "${_PLUGIN_SRC}")
     message(FATAL_ERROR
@@ -90,7 +90,7 @@ function(generate_ros2_msgs)
   )
 
   # --- Output directory ---
-  file(MAKE_DIRECTORY "${_ARG_OUTPUT_DIR}")
+  file(MAKE_DIRECTORY "${_ARG_OUTPUT_DIR}/msg")
 
   # --- Build --proto_path arguments ---
   set(_proto_path_args)
@@ -109,12 +109,13 @@ function(generate_ros2_msgs)
   endif()
 
   # --- Run protoc at configure time ---
+  # TODO convert this to add_custom_command
   execute_process(
     COMMAND
       "${_PROTOC}"
       "--plugin=protoc-gen-ros2msg=${_PLUGIN_WRAPPER}"
       "--ros2msg_opt=${_plugin_opt}"
-      "--ros2msg_out=${_ARG_OUTPUT_DIR}"
+      "--ros2msg_out=${_ARG_OUTPUT_DIR}/msg"
       ${_proto_path_args}
       ${_ARG_PROTO_FILES}
     RESULT_VARIABLE _result
@@ -135,10 +136,11 @@ function(generate_ros2_msgs)
   )
 
   # Collect results and expose to caller.
-  file(GLOB _generated "${_ARG_OUTPUT_DIR}/*.msg")
+  file(GLOB _generated RELATIVE ${_ARG_OUTPUT_DIR} "${_ARG_OUTPUT_DIR}/msg/*.msg")
+  list(TRANSFORM _generated PREPEND "${_ARG_OUTPUT_DIR}:")
   if(NOT _generated)
     message(FATAL_ERROR
-      "generate_ros2_msgs: no .msg files found in ${_ARG_OUTPUT_DIR} after generation"
+      "generate_ros2_msgs: no .msg files found in ${_ARG_OUTPUT_DIR}/msg after generation"
     )
   endif()
 

@@ -10,7 +10,7 @@
     "conversion_func": "Reserved for future user-supplied conversions. Only intrinsic conversions (Time/Duration) are supported now; generator errors on any user-supplied value."
   },
 
-  "SSL_DetectionBall": {
+  "DetectionBall": {
     "outputs": [
       {
         "ros_field": "pos",
@@ -30,7 +30,7 @@
     ]
   },
 
-  "SSL_DetectionRobot": {
+  "DetectionRobot": {
     "outputs": [
       {
         "ros_field": "pos",
@@ -52,7 +52,7 @@
     }
   },
 
-  "SSL_DetectionFrame": {
+  "DetectionFrame": {
     "fields": {
       "t_capture":        { "ros_type": "builtin_interfaces/Time" },
       "t_sent":           { "ros_type": "builtin_interfaces/Time" },
@@ -60,7 +60,7 @@
     }
   },
 
-  "SSL_GeometryCameraCalibration": {
+  "GeometryCameraCalibration": {
     "outputs": [
       {
         "ros_field": "pose",
@@ -92,7 +92,7 @@
     ]
   },
 
-  "SSL_GeometryFieldSize": {
+  "GeometryFieldSize": {
     "fields": {
       "field_length":                 { "scale": 1e-3, "ros_type": "float32" },
       "field_width":                  { "scale": 1e-3, "ros_type": "float32" },
@@ -110,14 +110,14 @@
     }
   },
 
-  "SSL_FieldCircularArc": {
+  "FieldCircularArc": {
     "fields": {
       "radius":    { "scale": 1e-3 },
       "thickness": { "scale": 1e-3 }
     }
   },
 
-  "SSL_FieldLineSegment": {
+  "FieldLineSegment": {
     "fields": {
       "thickness": { "scale": 1e-3 }
     }
@@ -130,7 +130,7 @@
     }
   },
 
-  "SSL_GeometryData": {
+  "GeometryData": {
     "fields": {
       "calib": { "ros_field": "calibration" }
     }
