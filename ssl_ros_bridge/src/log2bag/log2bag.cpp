@@ -21,10 +21,10 @@
 #include <filesystem>
 #include <fstream>
 #include <rclcpp/rclcpp.hpp>
-#include <ssl_league_msgs/msg/vision_wrapper.hpp>
+#include <ssl_league_msgs/msg/wrapper_packet.hpp>
 #include <ssl_league_msgs/msg/referee.hpp>
 #include <rosbag2_cpp/writer.hpp>
-#include "core/message_conversion.hpp"
+#include "message_conversion_generated.hpp"
 #include "log_reader.hpp"
 
 template<typename ProtoType, typename RosType>
@@ -95,14 +95,14 @@ int main(int argc, char ** argv)
   writer->open(log_path.stem().string());
 
   rclcpp::Serialization<ssl_league_msgs::msg::Referee> referee_serialization;
-  rclcpp::Serialization<ssl_league_msgs::msg::VisionWrapper> vision_serialization;
+  rclcpp::Serialization<ssl_league_msgs::msg::WrapperPacket> vision_serialization;
 
   while(const auto entry = reader.GetNextMessage()) {
     RenderProgressBar(stream.tellg(), log_file_size);
     WriteMessageIfExists<Referee, ssl_league_msgs::msg::Referee>(*entry, "/referee_messages",
       "ssl_league_msgs/msg/Referee", *writer, referee_serialization);
-    WriteMessageIfExists<SSL_WrapperPacket, ssl_league_msgs::msg::VisionWrapper>(*entry,
-      "/vision_messages", "ssl_league_msgs/msg/VisionWrapper", *writer, vision_serialization);
+    WriteMessageIfExists<SSL_WrapperPacket, ssl_league_msgs::msg::WrapperPacket>(*entry,
+      "/vision_messages", "ssl_league_msgs/msg/WrapperPacket", *writer, vision_serialization);
   }
   std::cout << "\n\n";
 

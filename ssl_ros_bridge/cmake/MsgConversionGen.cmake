@@ -16,7 +16,9 @@
 #
 # CMake re-runs automatically when any PROTO_FILES or the SIDECAR changes.
 
-cmake_minimum_required(VERSION 3.16)
+cmake_minimum_required(VERSION 3.18)  # CMAKE_CURRENT_FUNCTION_LIST_DIR (3.17), find_program(REQUIRED) (3.18)
+
+include("${CMAKE_CURRENT_LIST_DIR}/../../ssl_league_msgs/cmake/AteamProtoGenCommon.cmake")
 
 function(generate_message_conversion)
   cmake_parse_arguments(_ARG "" "OUTPUT_DIR;SIDECAR" "PROTO_FILES;PROTO_PATHS" ${ARGN})
@@ -31,12 +33,12 @@ function(generate_message_conversion)
   find_package(Python3 REQUIRED COMPONENTS Interpreter)
   find_program(_PROTOC protoc REQUIRED DOC "protoc compiler")
 
-  get_filename_component(_CMAKE_DIR "${CMAKE_CURRENT_LIST_FILE}" DIRECTORY)
+  set(_CMAKE_DIR "${CMAKE_CURRENT_FUNCTION_LIST_DIR}")
   set(_SCRIPT "${_CMAKE_DIR}/gen_message_conversion.py")
+  set(_SHARED_SCRIPT "${_CMAKE_DIR}/../../ssl_league_msgs/cmake/ateam_proto_shared.py")
 
-  if(NOT EXISTS "${_SCRIPT}")
-    message(FATAL_ERROR "generate_message_conversion: script not found at ${_SCRIPT}")
-  endif()
+  ateam_require_script("${_SCRIPT}" "generate_message_conversion")
+  ateam_require_script("${_SHARED_SCRIPT}" "generate_message_conversion")
 
   # Build --proto-paths args
   set(_path_args)
@@ -47,34 +49,44 @@ function(generate_message_conversion)
   # Build --sidecar arg
   set(_sidecar_arg)
   if(_ARG_SIDECAR)
-    if(NOT EXISTS "${_ARG_SIDECAR}")
-      message(FATAL_ERROR "generate_message_conversion: SIDECAR not found: ${_ARG_SIDECAR}")
-    endif()
+    ateam_require_sidecar("${_ARG_SIDECAR}" "generate_message_conversion")
     set(_sidecar_arg "--sidecar" "${_ARG_SIDECAR}")
   endif()
 
   file(MAKE_DIRECTORY "${_ARG_OUTPUT_DIR}")
 
-  execute_process(
-    COMMAND
-      "${Python3_EXECUTABLE}" "${_SCRIPT}"
-      "--proto-files" ${_ARG_PROTO_FILES}
-      ${_path_args}
-      ${_sidecar_arg}
-      "--output-dir" "${_ARG_OUTPUT_DIR}"
-    RESULT_VARIABLE _result
-    OUTPUT_VARIABLE _stdout
-    ERROR_VARIABLE  _stderr
+  set(_gen_command
+    "${Python3_EXECUTABLE}" "${_SCRIPT}"
+    "--proto-files" ${_ARG_PROTO_FILES}
+    ${_path_args}
+    ${_sidecar_arg}
+    "--output-dir" "${_ARG_OUTPUT_DIR}"
+    "--protoc-path" "${_PROTOC}"
   )
 
-  if(NOT _result EQUAL 0)
-    message(FATAL_ERROR
-      "generate_message_conversion: generator failed (exit ${_result}):\n${_stderr}")
+  set(_hpp "${_ARG_OUTPUT_DIR}/message_conversion_generated.hpp")
+  set(_cpp "${_ARG_OUTPUT_DIR}/message_conversion_generated.cpp")
+
+  # Run once now so the generated files exist for configure-time consumers
+  # (e.g. add_library() argument lists).
+  ateam_run_generator(COMMAND ${_gen_command} ERROR_PREFIX "generate_message_conversion: generator")
+
+  set(_depends ${_ARG_PROTO_FILES} "${_SCRIPT}" "${_SHARED_SCRIPT}")
+  if(_ARG_SIDECAR)
+    list(APPEND _depends "${_ARG_SIDECAR}")
   endif()
 
-  # Re-configure when proto files or sidecar change
-  set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS
-    ${_ARG_PROTO_FILES}
-    ${_ARG_SIDECAR}
+  # Rerun at build time (no reconfigure needed) whenever a proto, the
+  # generator script, or the sidecar changes.
+  add_custom_command(
+    OUTPUT "${_hpp}" "${_cpp}"
+    COMMAND ${_gen_command}
+    DEPENDS ${_depends}
+    COMMENT "Regenerating message conversion code for ${PROJECT_NAME} from proto sources"
+    VERBATIM
   )
+
+  # Full reconfigure still required if the output file set itself would
+  # need to change (it doesn't here — always exactly these two files).
+  set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS ${_depends})
 endfunction()

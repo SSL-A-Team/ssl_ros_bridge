@@ -1,6 +1,5 @@
 add_library(${PROJECT_NAME}_core SHARED
     get_ip_addresses.cpp
-    message_conversion.cpp
     multicast_receiver.cpp
     ${_CONV_OUT}/message_conversion_generated.cpp
 )

@@ -1,7 +1,12 @@
 # Ros2MsgGen.cmake
 #
-# Provides generate_ros2_msgs() — runs the protoc ros2msg plugin at CMake
-# configure time and returns the list of generated .msg files.
+# Provides generate_ros2_msgs() — runs the protoc ros2msg plugin once at
+# CMake configure time to determine the .msg file list (required up front
+# by rosidl_generate_interfaces()), and registers a build-time
+# add_custom_command that reruns protoc whenever a proto or plugin script
+# changes, so `ninja`/`make` alone regenerates content without a
+# reconfigure. If the message *list* itself changes, a build-time check
+# fails loudly telling you to reconfigure.
 #
 # Usage:
 #   generate_ros2_msgs(
@@ -23,11 +28,9 @@
 #   sidecar are consumed and emitted as annotated ROS types; remaining fields
 #   pass through normally. See protoc_gen_ros2msg.py docstring for schema.
 #
-# Generation runs at configure time so .msg files exist when
-# rosidl_generate_interfaces() is called.  CMake re-runs automatically when
-# any PROTO_FILES changes (CMAKE_CONFIGURE_DEPENDS).
+cmake_minimum_required(VERSION 3.18)  # CMAKE_CURRENT_FUNCTION_LIST_DIR (3.17), find_program(REQUIRED) (3.18)
 
-cmake_minimum_required(VERSION 3.16)
+include("${CMAKE_CURRENT_LIST_DIR}/AteamProtoGenCommon.cmake")
 
 function(generate_ros2_msgs)
   cmake_parse_arguments(
@@ -67,14 +70,12 @@ function(generate_ros2_msgs)
   find_package(Python3 REQUIRED COMPONENTS Interpreter)
 
   # --- Plugin path (sibling of this .cmake file) ---
-  get_filename_component(_CMAKE_DIR "${CMAKE_CURRENT_LIST_FILE}" DIRECTORY)
+  set(_CMAKE_DIR "${CMAKE_CURRENT_FUNCTION_LIST_DIR}")
   set(_PLUGIN_SRC "${_CMAKE_DIR}/protoc_gen_ros2msg.py")
 
-  if(NOT EXISTS "${_PLUGIN_SRC}")
-    message(FATAL_ERROR
-      "generate_ros2_msgs: plugin not found at ${_PLUGIN_SRC}"
-    )
-  endif()
+  ateam_require_script("${_PLUGIN_SRC}" "generate_ros2_msgs")
+
+  file(GLOB _PLUGIN_DEPS "${_CMAKE_DIR}/*.py")
 
   # Generate an executable wrapper in the build tree so we can pass an
   # explicit Python interpreter without relying on the script's shebang.
@@ -101,48 +102,76 @@ function(generate_ros2_msgs)
   # --- Build plugin options ---
   set(_plugin_opt "optional_submsg=${_opt_submsg}")
   if(_ARG_SIDECAR)
-    if(NOT EXISTS "${_ARG_SIDECAR}")
-      message(FATAL_ERROR "generate_ros2_msgs: SIDECAR file not found: ${_ARG_SIDECAR}")
-    endif()
+    ateam_require_sidecar("${_ARG_SIDECAR}" "generate_ros2_msgs")
     string(APPEND _plugin_opt ",sidecar=${_ARG_SIDECAR}")
     set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${_ARG_SIDECAR}")
   endif()
 
-  # --- Run protoc at configure time ---
-  # TODO convert this to add_custom_command
-  execute_process(
-    COMMAND
-      "${_PROTOC}"
-      "--plugin=protoc-gen-ros2msg=${_PLUGIN_WRAPPER}"
-      "--ros2msg_opt=${_plugin_opt}"
-      "--ros2msg_out=${_ARG_OUTPUT_DIR}/msg"
-      ${_proto_path_args}
-      ${_ARG_PROTO_FILES}
-    RESULT_VARIABLE _result
-    ERROR_VARIABLE  _stderr
-    OUTPUT_QUIET
+  set(_protoc_command
+    "${_PROTOC}"
+    "--plugin=protoc-gen-ros2msg=${_PLUGIN_WRAPPER}"
+    "--ros2msg_opt=${_plugin_opt}"
+    "--ros2msg_out=${_ARG_OUTPUT_DIR}/msg"
+    ${_proto_path_args}
+    ${_ARG_PROTO_FILES}
   )
 
-  if(NOT _result EQUAL 0)
-    message(FATAL_ERROR
-      "generate_ros2_msgs: protoc failed (exit ${_result}):\n${_stderr}"
-    )
-  endif()
+  # Run once now so the generated .msg file *list* is known at configure
+  # time — rosidl_generate_interfaces() requires it up front.
+  ateam_run_generator(COMMAND ${_protoc_command} ERROR_PREFIX "generate_ros2_msgs: protoc")
 
-  # Re-run CMake configure when any proto file changes.
-  set_property(
-    DIRECTORY APPEND PROPERTY
-    CMAKE_CONFIGURE_DEPENDS ${_ARG_PROTO_FILES}
-  )
-
-  # Collect results and expose to caller.
-  file(GLOB _generated RELATIVE ${_ARG_OUTPUT_DIR} "${_ARG_OUTPUT_DIR}/msg/*.msg")
-  list(TRANSFORM _generated PREPEND "${_ARG_OUTPUT_DIR}:")
-  if(NOT _generated)
+  file(GLOB _generated_abs "${_ARG_OUTPUT_DIR}/msg/*.msg")
+  if(NOT _generated_abs)
     message(FATAL_ERROR
       "generate_ros2_msgs: no .msg files found in ${_ARG_OUTPUT_DIR}/msg after generation"
     )
   endif()
+
+  set(_depends ${_ARG_PROTO_FILES} ${_PLUGIN_DEPS})
+  if(_ARG_SIDECAR)
+    list(APPEND _depends "${_ARG_SIDECAR}")
+  endif()
+
+  # Snapshot the expected file list so a build-time check can catch it
+  # going stale (see CheckGeneratedMsgList.cmake).
+  set(_manifest "${_ARG_OUTPUT_DIR}/.expected_msgs.txt")
+  set(_expected_names)
+  foreach(_f ${_generated_abs})
+    get_filename_component(_n "${_f}" NAME)
+    list(APPEND _expected_names "${_n}")
+  endforeach()
+  list(SORT _expected_names)
+  string(REPLACE ";" "\n" _manifest_contents "${_expected_names}")
+  file(WRITE "${_manifest}" "${_manifest_contents}\n")
+
+  # Re-run this command at build time (no reconfigure needed) whenever a
+  # proto file or plugin script changes, so incremental `ninja`/`make`
+  # builds pick up content changes. The check afterward catches the case
+  # where the message *list* itself changed (new/removed/renamed message)
+  # and rosidl_generate_interfaces() now has a stale file list — that
+  # still requires a reconfigure, so fail loudly instead of building
+  # silently against old paths.
+  add_custom_command(
+    OUTPUT ${_generated_abs}
+    COMMAND ${_protoc_command}
+    COMMAND "${CMAKE_COMMAND}"
+      "-DOUTPUT_DIR=${_ARG_OUTPUT_DIR}"
+      "-DMANIFEST=${_manifest}"
+      -P "${_CMAKE_DIR}/CheckGeneratedMsgList.cmake"
+    DEPENDS ${_depends}
+    COMMENT "Regenerating ROS2 msg files for ${PROJECT_NAME} from proto sources"
+    VERBATIM
+  )
+
+  # Full reconfigure still required if the message *list* changes, since
+  # that changes what OUTPUT/rosidl need to know about up front.
+  set_property(
+    DIRECTORY APPEND PROPERTY
+    CMAKE_CONFIGURE_DEPENDS ${_depends}
+  )
+
+  file(GLOB _generated RELATIVE "${_ARG_OUTPUT_DIR}" "${_ARG_OUTPUT_DIR}/msg/*.msg")
+  list(TRANSFORM _generated PREPEND "${_ARG_OUTPUT_DIR}:")
 
   set(GENERATED_ROS2_MSGS "${_generated}" PARENT_SCOPE)
 endfunction()

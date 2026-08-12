@@ -26,10 +26,10 @@
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp_components/register_node_macro.hpp>
 
-#include "core/message_conversion.hpp"
+#include "message_conversion_generated.hpp"
 #include "core/multicast_receiver.hpp"
 #include "core/protobuf_logging.hpp"
-#include <ssl_league_msgs/msg/vision_wrapper.hpp>
+#include <ssl_league_msgs/msg/wrapper_packet.hpp>
 
 namespace ssl_ros_bridge::vision_bridge
 {
@@ -39,7 +39,7 @@ class SSLVisionBridgeNode : public rclcpp::Node
 public:
   explicit SSLVisionBridgeNode(const rclcpp::NodeOptions & options)
   : rclcpp::Node("ssl_vision_bridge", options),
-    vision_publisher_(create_publisher<ssl_league_msgs::msg::VisionWrapper>("~/vision_messages",
+    vision_publisher_(create_publisher<ssl_league_msgs::msg::WrapperPacket>("~/vision_messages",
       rclcpp::SystemDefaultsQoS())),
     multicast_receiver_(
       declare_parameter<std::string>("ssl_vision_ip", "224.5.23.2"),
@@ -55,7 +55,7 @@ public:
   }
 
 private:
-  rclcpp::Publisher<ssl_league_msgs::msg::VisionWrapper>::SharedPtr vision_publisher_;
+  rclcpp::Publisher<ssl_league_msgs::msg::WrapperPacket>::SharedPtr vision_publisher_;
   core::MulticastReceiver multicast_receiver_;
 
   void multicastCallback(uint8_t * buffer, size_t bytes_received)

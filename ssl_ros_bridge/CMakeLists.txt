@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.8)
+cmake_minimum_required(VERSION 3.18)
 project(ssl_ros_bridge)
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
@@ -34,6 +34,7 @@ generate_message_conversion(
     ${_PROTO_DIR}/ssl_vision_detection.proto
     ${_PROTO_DIR}/ssl_vision_geometry.proto
     ${_PROTO_DIR}/ssl_vision_wrapper.proto
+    ${_PROTO_DIR}/ssl_simulation_config.proto
     ${_PROTO_DIR}/ssl_simulation_control.proto
     ${_PROTO_DIR}/ssl_simulation_error.proto
   PROTO_PATHS ${_PROTO_DIR}

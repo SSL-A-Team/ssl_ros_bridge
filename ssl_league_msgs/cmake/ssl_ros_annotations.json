@@ -7,8 +7,13 @@
     "scale": "Multiply all consumed scalar components by this factor (metadata; applied at bridge layer).",
     "ros_type": "Override emitted ROS type. Required for builtin_interfaces/Time and /Duration (triggers intrinsic conversion based on proto wire type: float/double → from_seconds, int/uint → from_microseconds).",
     "ros_field": "Override output field name. Omit to keep proto field name.",
-    "conversion_func": "Reserved for future user-supplied conversions. Only intrinsic conversions (Time/Duration) are supported now; generator errors on any user-supplied value."
+    "conversion_func": "Reserved for future user-supplied conversions. Only intrinsic conversions (Time/Duration) are supported now; generator errors on any user-supplied value.",
+    "skip": "On a field annotation: omit this field from the generated .msg entirely (must be the only key in the annotation). For proto constructs with no sane ROS mapping, e.g. google.protobuf.Any.",
+    "default": "ROS2 .msg default value for this field (proto has no equivalent — [default=] is proto2-only and not read by the generator). Not supported on genuinely repeated fields. On a proto2 'optional' scalar (modeled as a 0/1-element ROS array), emits a 1-element array default, matching the presence convention: proto unset -> empty array, ROS default -> that one value present.",
+    "_skip_types": "Top-level list of message names to omit entirely (no .msg file emitted). Any field elsewhere referencing a skipped type must itself carry a 'skip' annotation, or generation errors."
   },
+
+  "_skip_types": [],
 
   "DetectionBall": {
     "outputs": [
@@ -145,46 +150,107 @@
     }
   },
 
-  "Referee_Point": {
+  "RefereePoint": {
     "fields": {
       "x": { "scale": 1e-3 },
       "y": { "scale": 1e-3 }
     }
   },
 
-  "KeeperHeldBall": {
+  "GameEventKeeperHeldBall": {
     "fields": {
       "duration": { "ros_type": "builtin_interfaces/Duration" }
     }
   },
 
-  "BotHeldBallDeliberately": {
+  "GameEventBotHeldBallDeliberately": {
     "fields": {
       "duration": { "ros_type": "builtin_interfaces/Duration" }
     }
   },
 
-  "KickTimeout": {
+  "GameEventKickTimeout": {
     "fields": {
       "time": { "ros_type": "builtin_interfaces/Duration" }
     }
   },
 
-  "NoProgressInGame": {
+  "GameEventNoProgressInGame": {
     "fields": {
       "time": { "ros_type": "builtin_interfaces/Duration" }
     }
   },
 
-  "PlacementSucceeded": {
+  "GameEventPlacementSucceeded": {
     "fields": {
       "time_taken": { "ros_type": "builtin_interfaces/Duration" }
     }
   },
 
-  "Prepared": {
+  "GameEventPrepared": {
     "fields": {
       "time_taken": { "ros_type": "builtin_interfaces/Duration" }
+    }
+  },
+
+  "TeleportBall": {
+    "outputs": [
+      {
+        "ros_field": "pos",
+        "ros_type": "geometry_msgs/Point32",
+        "from": { "x": "x", "y": "y", "z": "z" },
+        "_consumed": ["x", "y", "z"],
+        "_comment": "already meters (proto field comments say [m]) -- no scale, unlike SSL vision/geometry protos which use mm"
+      },
+      {
+        "ros_field": "velocity",
+        "ros_type": "geometry_msgs/Vector3",
+        "from": { "x": "vx", "y": "vy", "z": "vz" },
+        "_consumed": ["vx", "vy", "vz"]
+      }
+    ]
+  },
+
+  "TeleportRobot": {
+    "outputs": [
+      {
+        "ros_field": "pos",
+        "ros_type": "geometry_msgs/Point32",
+        "from": { "x": "x", "y": "y" },
+        "_consumed": ["x", "y"],
+        "_comment": "meters; z unused (2D). orientation (yaw, rad) passes through separately -- not packaged into a quaternion"
+      },
+      {
+        "ros_field": "velocity",
+        "ros_type": "geometry_msgs/Vector3",
+        "from": { "x": "v_x", "y": "v_y" },
+        "_consumed": ["v_x", "v_y"],
+        "_comment": "z unused; angular velocity is scalar v_angular (2D yaw rate), passes through separately rather than as a 3-vector"
+      }
+    ]
+  },
+
+  "RobotSpecs": {
+    "fields": {
+      "custom": { "skip": true, "_comment": "google.protobuf.Any; simulator-specific, no fixed schema to map to ROS" }
+    }
+  },
+
+  "RealismConfig": {
+    "fields": {
+      "custom": { "skip": true, "_comment": "google.protobuf.Any; simulator-specific, no fixed schema to map to ROS" }
+    }
+  },
+
+  "GameEventMultipleFouls": {
+    "fields": {
+      "caused_game_events": { "skip": true, "_comment": "repeated GameEvent -- recursive self-reference (GameEvent -> GameEventMultipleFouls -> GameEvent); ROS2 messages are fixed-layout structs and cannot be self-referential. Same conclusion reached by the hand-crafted msgs this generator replaces (see main branch MultipleFouls.msg TODO)." }
+    }
+  },
+
+  "SimulatorControl": {
+    "fields": {
+      "simulation_speed": { "default": 1.0, "_comment": "proto has no [default=]; matches the hand-crafted msg this generator replaces, which defaulted to normal (1x) speed" }
     }
   }
 }
