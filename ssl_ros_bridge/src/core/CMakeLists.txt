@@ -2,10 +2,13 @@ add_library(${PROJECT_NAME}_core SHARED
     get_ip_addresses.cpp
     message_conversion.cpp
     multicast_receiver.cpp
+    ${_CONV_OUT}/message_conversion_generated.cpp
 )
-target_include_directories(${PROJECT_NAME}_core PUBLIC .)
+target_include_directories(${PROJECT_NAME}_core PUBLIC . ${_CONV_OUT})
 ament_target_dependencies(${PROJECT_NAME}_core
   rclcpp
+  builtin_interfaces
+  geometry_msgs
   ssl_league_msgs
   ssl_league_protobufs
   tf2

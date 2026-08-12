@@ -68,7 +68,7 @@ function(generate_ros2_msgs)
 
   # --- Plugin path (sibling of this .cmake file) ---
   get_filename_component(_CMAKE_DIR "${CMAKE_CURRENT_LIST_FILE}" DIRECTORY)
-  set(_PLUGIN_SRC "${_CMAKE_DIR}/cmake/protoc_gen_ros2msg.py")
+  set(_PLUGIN_SRC "${_CMAKE_DIR}/protoc_gen_ros2msg.py")
 
   if(NOT EXISTS "${_PLUGIN_SRC}")
     message(FATAL_ERROR
