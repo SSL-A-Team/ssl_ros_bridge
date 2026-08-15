@@ -21,7 +21,7 @@
 #ifndef TEAM_CLIENT__TEAM_CLIENT_HPP_
 #define TEAM_CLIENT__TEAM_CLIENT_HPP_
 
-#include <ssl_league_protobufs/ssl_gc_rcon_team.pb.h>
+#include <ssl_league_protobufs/gc/ssl_gc_rcon_team.pb.h>
 #include <array>
 #include <atomic>
 #include <mutex>

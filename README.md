@@ -8,6 +8,8 @@ This repository provides ROS 2 packages containing utilities for connecting your
 
 This repo is designed to be built in a colcon workspace. You can clone this repo alongside your own code or as a submodule within your own repository.
 
+This repo itself contains a git submodule (the league protobuf definitions), so clone with `--recurse-submodules`, or run `git submodule update --init --recursive` afterward.
+
 ## Usage
 
 ### Bridge Nodes
@@ -46,11 +48,11 @@ ros2 run ssl_ros_bridge log2bag /path/to/game/log.log
 
 ### ssl_league_protobufs
 
-This package includes the league-defined protobuf files and builds them into a library available for other packages.
+This package includes the league-defined protobuf files (via the [ssl-protocol-defs](https://github.com/RoboCup-SSL/ssl-protocol-defs) git submodule) and builds them into a library available for other packages.
 
 ### ssl_league_msgs
 
-This package defines ROS messages which closely mirror the league protobufs.
+This package defines ROS messages which closely mirror the league protobufs. These messages are generated automatically from the protobuf definitions at build time rather than hand-written — see [ARCHITECTURE.md](ARCHITECTURE.md) for how.
 
 #### Optional Fields
 
@@ -79,7 +81,7 @@ This node listens for the multicast vision messages sent by ssl-vision and publi
 ##### Published Topics
 
 * ~/vision_messages
-   * Type: [ssl_league_msgs/msg/VisionWrapper](ssl_league_msgs/msg/vision/VisionWrapper.msg)
+   * Type: `ssl_league_msgs/msg/WrapperPacket`
    * Contains vision data including robot detections, ball detections, and field geometry.
 
 ##### Parameters
@@ -108,7 +110,7 @@ The team client node needs to know the IP address fo the game controller server 
 ##### Published Topics
 
 * ~/referee_messages
-  * Type: [ssl_league_msgs/msg/Referee](ssl_league_msgs/msg/game_controller/Referee.msg)
+  * Type: `ssl_league_msgs/msg/Referee`
   * Contains the latest information from the game controller.
 
 ##### Subscribed Topics
@@ -187,4 +189,4 @@ _Note_: Encrypted connections are not currently supported.
 
 ## Contributing
 
-See [our contributing guidelines](CONTRIBUTING.md).
+See [our contributing guidelines](CONTRIBUTING.md). For how these packages are built and how the bridge works internally, see [ARCHITECTURE.md](ARCHITECTURE.md).

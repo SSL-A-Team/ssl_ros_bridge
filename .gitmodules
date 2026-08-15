@@ -1,0 +1,3 @@
+[submodule "ssl_league_protobufs/ssl-protocol-defs"]
+	path = ssl_league_protobufs/ssl-protocol-defs
+	url = https://github.com/RoboCup-SSL/ssl-protocol-defs.git

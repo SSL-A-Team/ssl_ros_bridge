@@ -18,7 +18,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#include <ssl_league_protobufs/ssl_vision_wrapper.pb.h>
+#include <ssl_league_protobufs/vision/ssl_vision_wrapper.pb.h>
 
 #include <functional>
 #include <string>

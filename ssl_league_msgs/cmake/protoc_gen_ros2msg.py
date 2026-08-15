@@ -22,10 +22,10 @@ Options (via --ros2msg_opt=key=value,key=value):
   optional_submsg=error      Reject any non-oneof message-type field as a
                              build error; forces schema authors to be explicit.
   sidecar=<path>             Path to a JSON annotation file. Fields listed in
-                             the sidecar are consumed and emitted as annotated
-                             ROS types; remaining fields pass through normally.
+                             it are consumed and emitted as annotated ROS
+                             types; remaining fields pass through normally.
 
-Sidecar annotation format (per message):
+Annotation file format (per message):
   "MsgName": {
     "fields": {
       "proto_field": { "ros_type": "...", "ros_field": "...", "scale": ... },
@@ -54,7 +54,7 @@ Sidecar annotation format (per message):
 
   Some proto constructs have no sane ROS translation (e.g. google.protobuf.Any
   has no fixed schema to map to a ROS type). The generator fails by default on
-  these; the sidecar can opt in to dropping them:
+  these; the annotation file can opt in to dropping them:
     - A "skip": true field annotation (must be the only key) omits that field
       from the generated .msg, like any other consumed field.
     - A top-level "_skip_types" list omits an entire message (no .msg file
@@ -85,19 +85,19 @@ sys.path.insert(0, str(Path(__file__).parent))
 # Must follow the sys.path.insert() above, so this can't sort before the
 # google.protobuf imports the way import-order linting wants.
 from ateam_proto_shared import (  # noqa: E402, I100
+    Annotations,
     build_map_entry_type_names,
-    field_shape,
+    classify_field_shape,
+    consumed_annotation_fields,
     FieldAnnotation,
     flatten_type_name,
     HAS_FIELD_PREFIX,
     iter_messages,
-    load_sidecar,
-    MessageSidecarEntry,
+    load_annotations,
+    MessageAnnotationEntry,
     output_proto_fields,
     OutputEntry,
     parse_options,
-    Sidecar,
-    sidecar_consumed,
 )
 
 FD = descriptor_pb2.FieldDescriptorProto
@@ -132,11 +132,11 @@ _INTRINSIC_ROS_TYPES = frozenset({
     'builtin_interfaces/Duration',
 })
 
-# Populated by main() from sidecar "_skip_types" before generation runs.
+# Populated by main() from the annotation file's "_skip_types" before generation runs.
 _SKIP_TYPES: frozenset = frozenset()
 
 
-def ros2_field_type(field: descriptor_pb2.FieldDescriptorProto) -> str:
+def map_field_to_ros2_type(field: descriptor_pb2.FieldDescriptorProto) -> str:
     if field.type in SCALAR_TYPE_MAP:
         return SCALAR_TYPE_MAP[field.type]
 
@@ -147,14 +147,14 @@ def ros2_field_type(field: descriptor_pb2.FieldDescriptorProto) -> str:
         if field.type_name == '.google.protobuf.Any':
             raise ValueError(
                 "Fields with type 'Any' are not supported (no fixed schema to map "
-                "to a ROS type). Add a 'skip' field annotation in the sidecar."
+                "to a ROS type). Add a 'skip' field annotation in the annotation file."
             )
 
         flat = flatten_type_name(field.type_name).replace('SSL_', '')
         if flat in _SKIP_TYPES:
             raise ValueError(
-                f"references type '{flat}', which is skipped via sidecar "
-                f"'_skip_types'. Add a 'skip' field annotation for this field, "
+                f"references type '{flat}', which is skipped via the annotation "
+                f"file's '_skip_types'. Add a 'skip' field annotation for this field, "
                 f"or remove '{flat}' from '_skip_types'."
             )
 
@@ -164,23 +164,23 @@ def ros2_field_type(field: descriptor_pb2.FieldDescriptorProto) -> str:
 
 
 # ---------------------------------------------------------------------------
-# Sidecar validation (error accumulation is specific to this script's
-# protoc-plugin response.error mechanism, so this stays local;
-# load_sidecar/sidecar_consumed/output_proto_fields are shared — see
-# ateam_proto_shared.py)
+# Annotation entry validation (error accumulation is specific to this
+# script's protoc-plugin response.error mechanism, so this stays local;
+# load_annotations/consumed_annotation_fields/output_proto_fields are
+# shared — see ateam_proto_shared.py)
 # ---------------------------------------------------------------------------
 
 
-def _validate_sidecar_entry(
-    sidecar_entry: MessageSidecarEntry,
+def _validate_annotation_entry(
+    annotation_entry: MessageAnnotationEntry,
     proto_field_map: dict[str, descriptor_pb2.FieldDescriptorProto],
     flat_name: str,
     errors: list[str],
 ) -> None:
-    for proto_name, ann in sidecar_entry.get('fields', {}).items():
+    for proto_name, ann in annotation_entry.get('fields', {}).items():
         if proto_name not in proto_field_map:
             errors.append(
-                f"{flat_name}: sidecar 'fields' references unknown proto field '{proto_name}'"
+                f"{flat_name}: annotation 'fields' references unknown proto field '{proto_name}'"
             )
 
             continue
@@ -212,12 +212,12 @@ def _validate_sidecar_entry(
                     f'stand in for a whole list.'
                 )
 
-    for out in sidecar_entry.get('outputs', []):
+    for out in annotation_entry.get('outputs', []):
         ros_field = out.get('ros_field', '<unnamed>')
         for proto_name in output_proto_fields(out):
             if proto_name not in proto_field_map:
                 errors.append(
-                    f"{flat_name}: sidecar output '{ros_field}' references unknown "
+                    f"{flat_name}: annotation output '{ros_field}' references unknown "
                     f"proto field '{proto_name}'"
                 )
 
@@ -228,7 +228,7 @@ def _validate_sidecar_entry(
             )
 
 
-def _message_type_edges(
+def _iter_message_type_edges(
     msg: descriptor_pb2.DescriptorProto,
     consumed: frozenset[str],
     map_entry_type_names: frozenset[str],
@@ -237,7 +237,7 @@ def _message_type_edges(
     Yield (proto_field_name, target_flat_type_name) for msg's message-type fields.
 
     Only fields that will survive into the generated .msg — not consumed by
-    the sidecar, not a map entry, not Any, not a skipped type.
+    an annotation, not a map entry, not Any, not a skipped type.
     """
     for field in msg.field:
         if field.name in consumed:
@@ -257,19 +257,19 @@ def _message_type_edges(
 def find_type_cycles(
     all_files: dict[str, descriptor_pb2.FileDescriptorProto],
     file_to_generate_names: Iterable[str],
-    sidecar: Sidecar,
+    annotations: Annotations,
     map_entry_type_names: frozenset[str],
 ) -> list[str]:
     """
     Detect cycles in the message-type reference graph across every generated message.
 
-    Considers the graph post sidecar consumption/skip. ROS2 .msg files are
+    Considers the graph post annotation consumption/skip. ROS2 .msg files are
     fixed-layout structs and cannot be self-referential, even indirectly —
     a cycle always breaks generation downstream (rosidl_generator_type_description
     has a latent bug: it crashes with an opaque KeyError instead of a clean
     error; see calculate_type_hash's double-delete of a cycled type's
     'default_value' key after deepcopy aliasing). Detect it here instead,
-    with the concrete chain, so the sidecar can 'skip' a field to break it.
+    with the concrete chain, so the annotation file can 'skip' a field to break it.
     """
     graph: dict[str, list[tuple[str, str]]] = {}
     for file_name in file_to_generate_names:
@@ -278,8 +278,8 @@ def find_type_cycles(
             if flat_name in _SKIP_TYPES:
                 continue
 
-            consumed = sidecar_consumed(sidecar.get(flat_name, {}))
-            graph[flat_name] = list(_message_type_edges(msg, consumed, map_entry_type_names))
+            consumed = consumed_annotation_fields(annotations.get(flat_name, {}))
+            graph[flat_name] = list(_iter_message_type_edges(msg, consumed, map_entry_type_names))
 
     found: set[tuple[tuple[str, ...], tuple[str, ...]]] = set()  # canonicalized (nodes, fields)
 
@@ -313,19 +313,19 @@ def find_type_cycles(
             f'Recursive message type reference detected: {chain}. ROS2 '
             f'messages are fixed-layout structs and cannot be '
             f"self-referential. Add a 'skip' field annotation in the "
-            f'sidecar on one of the fields in the cycle to break it.'
+            f'annotation file on one of the fields in the cycle to break it.'
         )
 
     return errors
 
 
 def _emit_one_output(out: OutputEntry, lines: list[str]) -> None:
-    """Emit the single ROS struct field for one sidecar 'outputs' entry."""
+    """Emit the single ROS struct field for one annotation 'outputs' entry."""
     lines.append(f"{out['ros_type']} {out['ros_field']}")
 
 
-def _default_literal(value: bool | str | int | float) -> str:
-    """Format a sidecar 'default' JSON value as a ROS2 .msg default-value literal."""
+def _format_default_literal(value: bool | str | int | float) -> str:
+    """Format an annotation 'default' JSON value as a ROS2 .msg default-value literal."""
     if isinstance(value, bool):
         return 'true' if value else 'false'
 
@@ -336,7 +336,7 @@ def _default_literal(value: bool | str | int | float) -> str:
     return repr(value)
 
 
-def _emit_one_sidecar_field(
+def _emit_annotation_field_override(
     proto_name: str,
     ann: FieldAnnotation,
     pf: descriptor_pb2.FieldDescriptorProto,
@@ -366,13 +366,13 @@ def _emit_one_sidecar_field(
         return
     else:
         try:
-            ros_type = ros2_field_type(pf)
+            ros_type = map_field_to_ros2_type(pf)
         except ValueError as e:
             errors.append(f'{flat_name}.{proto_name}: {e}')
 
             return
 
-    shape = field_shape(pf, proto2)
+    shape = classify_field_shape(pf, proto2)
 
     if 'default' not in ann:
         if shape.is_repeated or shape.is_proto2_optional:
@@ -385,10 +385,10 @@ def _emit_one_sidecar_field(
     # 'default' was already rejected at validation time for genuinely repeated
     # fields (a single value cannot stand in for a whole list). A proto2
     # "optional" scalar is modeled as a 0/1-element ROS array (see
-    # ros2_field_type), so its default is a 1-element array literal, matching
+    # map_field_to_ros2_type), so its default is a 1-element array literal, matching
     # the presence convention: unset proto field -> empty array, default ROS
     # field -> that one value present.
-    default_lit = _default_literal(ann['default'])
+    default_lit = _format_default_literal(ann['default'])
     if shape.is_proto2_optional:
         lines.append(f'{ros_type}[] {ros_name} [{default_lit}]')
     else:
@@ -399,7 +399,7 @@ def _emit_one_sidecar_field(
 # Main message generator
 # ---------------------------------------------------------------------------
 
-def generate_message_msg(
+def generate_message_definition(
     msg: descriptor_pb2.DescriptorProto,
     flat_name: str,
     source_file: str,
@@ -407,10 +407,10 @@ def generate_message_msg(
     errors: list[str],
     map_entry_type_names: frozenset[str],
     proto2: bool = False,
-    sidecar_entry: MessageSidecarEntry | None = None,
+    annotation_entry: MessageAnnotationEntry | None = None,
 ) -> str:
-    if sidecar_entry is None:
-        sidecar_entry = {}
+    if annotation_entry is None:
+        annotation_entry = {}
 
     lines = [
         f'# Generated from proto message {flat_name}',
@@ -420,11 +420,11 @@ def generate_message_msg(
 
     proto_field_map = {f.name: f for f in msg.field}
 
-    # Validate sidecar references before emitting anything.
-    _validate_sidecar_entry(sidecar_entry, proto_field_map, flat_name, errors)
+    # Validate annotation references before emitting anything.
+    _validate_annotation_entry(annotation_entry, proto_field_map, flat_name, errors)
 
-    consumed = sidecar_consumed(sidecar_entry)
-    field_overrides = sidecar_entry.get('fields', {})
+    consumed = consumed_annotation_fields(annotation_entry)
+    field_overrides = annotation_entry.get('fields', {})
 
     # 1. Enum value constants, upfront per ROS2 convention — one blank line
     # after each enum's cluster.
@@ -438,15 +438,15 @@ def generate_message_msg(
         lines.append('')
 
     # 2. Fields, walked in proto declaration order — this holds even for
-    # sidecar-annotated fields/outputs, so the .msg reads in the same order
-    # as the .proto. A sidecar 'outputs' entry (several proto fields
+    # annotated fields/outputs, so the .msg reads in the same order
+    # as the .proto. An annotation 'outputs' entry (several proto fields
     # collapsing into one ROS field, e.g. x/y/z -> a Point32) is emitted once,
     # at the position of the first proto field it consumes; the entry's other
     # consumed fields are skipped where they would otherwise fall, rather
     # than splitting the composite field's data across multiple positions.
     pending_outputs: list[tuple[OutputEntry, frozenset[str]]] = [
         (out, frozenset(output_proto_fields(out)))
-        for out in sidecar_entry.get('outputs', [])
+        for out in annotation_entry.get('outputs', [])
     ]
     output_trigger: dict[str, OutputEntry] = {}
     for field in msg.field:
@@ -466,7 +466,7 @@ def generate_message_msg(
 
         if field.name in consumed:
             if field.name in field_overrides:
-                _emit_one_sidecar_field(
+                _emit_annotation_field_override(
                     field.name, field_overrides[field.name], field, lines,
                     proto2, errors, flat_name,
                 )
@@ -478,11 +478,11 @@ def generate_message_msg(
             errors.append(
                 f'{flat_name}.{field.name}: proto map<K,V> fields have no ROS2 '
                 f"equivalent and are not supported. Add a 'skip' field annotation "
-                f'in the sidecar for this field to drop it explicitly.'
+                f'in the annotation file for this field to drop it explicitly.'
             )
             continue
 
-        shape = field_shape(field, proto2)
+        shape = classify_field_shape(field, proto2)
         is_repeated, in_oneof, is_proto2_optional = shape
 
         if in_oneof:
@@ -517,14 +517,14 @@ def generate_message_msg(
             lines.append(f'uint8 {oneof_name}_case')
             for of in oneof_fields:
                 try:
-                    lines.append(f'{ros2_field_type(of)} {of.name}')
+                    lines.append(f'{map_field_to_ros2_type(of)} {of.name}')
                 except ValueError as e:
                     errors.append(f'{flat_name}.{of.name}: {e}')
 
             continue
 
         try:
-            ros2_type = ros2_field_type(field)
+            ros2_type = map_field_to_ros2_type(field)
         except ValueError as e:
             errors.append(f'{flat_name}.{field.name}: {e}')
             continue
@@ -550,14 +550,14 @@ def generate_message_msg(
     return '\n'.join(lines) + '\n'
 
 
-def generate_enum_msg(
+def generate_enum_definition(
     enum: descriptor_pb2.EnumDescriptorProto, flat_name: str, source_file: str,
 ) -> str:
     """
     Constants-only .msg for a top-level proto enum.
 
     Nested enums are handled separately, inline in their containing message
-    (see the 'Enum value constants' step in generate_message_msg) — this
+    (see the 'Enum value constants' step in generate_message_definition) — this
     covers only enums declared at file scope, which have no containing
     message to attach constants to.
     """
@@ -592,11 +592,11 @@ def main() -> None:
 
         return
 
-    sidecar_path = opts.get('sidecar', None)
-    sidecar: Sidecar = load_sidecar(sidecar_path)
+    annotations_path = opts.get('sidecar', None)
+    annotations: Annotations = load_annotations(annotations_path)
 
     global _SKIP_TYPES
-    _SKIP_TYPES = frozenset(sidecar.get('_skip_types', []))
+    _SKIP_TYPES = frozenset(annotations.get('_skip_types', []))
     seen_skip_types: set[str] = set()
 
     map_entry_type_names = build_map_entry_type_names(request.proto_file)
@@ -606,7 +606,7 @@ def main() -> None:
     errors: list[str] = []
 
     errors.extend(find_type_cycles(
-        all_files, request.file_to_generate, sidecar, map_entry_type_names
+        all_files, request.file_to_generate, annotations, map_entry_type_names
     ))
 
     emitted_names: set[str] = set()
@@ -628,9 +628,9 @@ def main() -> None:
             emitted_names.add(flat_name)
             out = response.file.add()
             out.name = f'{flat_name}.msg'
-            out.content = generate_message_msg(
+            out.content = generate_message_definition(
                 msg, flat_name, source_file, optional_submsg, errors, map_entry_type_names,
-                proto2, sidecar_entry=sidecar.get(flat_name, {})
+                proto2, annotation_entry=annotations.get(flat_name, {})
             )
 
         for enum in fd.enum_type:
@@ -648,12 +648,12 @@ def main() -> None:
             emitted_names.add(flat_name)
             out = response.file.add()
             out.name = f'{flat_name}.msg'
-            out.content = generate_enum_msg(enum, flat_name, source_file)
+            out.content = generate_enum_definition(enum, flat_name, source_file)
 
     unused_skip_types = _SKIP_TYPES - seen_skip_types
     if unused_skip_types:
         errors.append(
-            f"sidecar '_skip_types' references message(s) never encountered "
+            f"annotation file '_skip_types' references message(s) never encountered "
             f'during generation: {sorted(unused_skip_types)}'
         )
 

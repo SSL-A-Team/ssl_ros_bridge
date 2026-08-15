@@ -3,16 +3,16 @@ Shared helpers for protoc_gen_ros2msg.py and gen_message_conversion.py.
 
 protoc_gen_ros2msg.py (ssl_league_msgs) is the .msg generator;
 gen_message_conversion.py (ssl_ros_bridge) is the C++ proto<->ROS bridge
-generator. Both must agree on naming, map-entry detection, and sidecar
+generator. Both must agree on naming, map-entry detection, and annotation
 semantics; that logic lives here once instead of two copies.
 
 Import with:
     from ateam_proto_shared import (
         parse_options, flatten_type_name, strip_package,
         build_map_entry_type_names, iter_messages,
-        load_sidecar, sidecar_consumed, output_proto_fields,
-        field_shape, FieldShape,
-        FieldAnnotation, OutputEntry, MessageSidecarEntry, Sidecar,
+        load_annotations, consumed_annotation_fields, output_proto_fields,
+        classify_field_shape, FieldShape,
+        FieldAnnotation, OutputEntry, MessageAnnotationEntry, Annotations,
         HAS_FIELD_PREFIX,
     )
 """
@@ -25,13 +25,13 @@ from google.protobuf import descriptor_pb2
 FD = descriptor_pb2.FieldDescriptorProto
 
 # ---------------------------------------------------------------------------
-# Sidecar JSON shapes
+# Annotation JSON shapes
 # ---------------------------------------------------------------------------
 #
 # Typed as TypedDict, not a dataclass: this is JSON config with no behavior,
 # and every call site already uses plain dict access (.get(...), [...]).
 # TypedDict types that shape and catches a typo'd key at type-check time
-# without changing the runtime value. See the sidecar annotation format in
+# without changing the runtime value. See the annotation file format in
 # protoc_gen_ros2msg.py's module docstring.
 #
 # OutputEntry uses the functional TypedDict form because one of its keys is
@@ -41,7 +41,7 @@ FD = descriptor_pb2.FieldDescriptorProto
 
 
 class FieldAnnotation(TypedDict, total=False):
-    """One entry under a message's sidecar 'fields' map."""
+    """One entry under a message's annotation entry 'fields' map."""
 
     ros_type: str
     ros_field: str
@@ -73,20 +73,20 @@ OutputEntry = TypedDict(
 )
 
 
-class MessageSidecarEntry(TypedDict, total=False):
-    """The sidecar entry for one message, keyed by the message's flat_name."""
+class MessageAnnotationEntry(TypedDict, total=False):
+    """The annotation entry for one message, keyed by the message's flat_name."""
 
     fields: dict[str, FieldAnnotation]
     outputs: list[OutputEntry]
 
 
-# The sidecar's top level mixes message-name keys (-> MessageSidecarEntry)
-# with reserved keys ("_skip_types": list[str], documentation-only
-# "_comment"/"_schema") that aren't message entries. TypedDict cannot
-# express "arbitrary keys of type A except these keys of type B", so the
-# top level stays loosely typed; only entries returned by
-# sidecar.get(flat_name, {}) are typed as MessageSidecarEntry.
-Sidecar = dict[str, Any]
+# The annotation file's top level mixes message-name keys (->
+# MessageAnnotationEntry) with reserved keys ("_skip_types": list[str],
+# documentation-only "_comment"/"_schema") that aren't message entries.
+# TypedDict cannot express "arbitrary keys of type A except these keys of
+# type B", so the top level stays loosely typed; only entries returned by
+# annotations.get(flat_name, {}) are typed as MessageAnnotationEntry.
+Annotations = dict[str, Any]
 
 # Prefix for the ROS-side presence-sentinel bool emitted alongside a
 # non-oneof message-type field under optional_submsg=has_field (see
@@ -193,7 +193,7 @@ class FieldShape(NamedTuple):
 
     One of: repeated (genuinely `repeated` in the proto), in a oneof, or a
     proto2 `optional` scalar/message (modeled as a 0/1-element ROS array;
-    see ros2_field_type). This 3-line computation was duplicated across
+    see map_field_to_ros2_type). This 3-line computation was duplicated across
     both generators; one typed helper replaces it.
     """
 
@@ -202,7 +202,7 @@ class FieldShape(NamedTuple):
     is_proto2_optional: bool
 
 
-def field_shape(field: descriptor_pb2.FieldDescriptorProto, proto2: bool) -> FieldShape:
+def classify_field_shape(field: descriptor_pb2.FieldDescriptorProto, proto2: bool) -> FieldShape:
     in_oneof = field.HasField('oneof_index')
     return FieldShape(
         is_repeated=field.label == FD.LABEL_REPEATED,
@@ -212,15 +212,15 @@ def field_shape(field: descriptor_pb2.FieldDescriptorProto, proto2: bool) -> Fie
 
 
 # ---------------------------------------------------------------------------
-# Sidecar helpers
+# Annotation file helpers
 # ---------------------------------------------------------------------------
 #
-# Sidecar annotation format is documented in protoc_gen_ros2msg.py's module
+# Annotation file format is documented in protoc_gen_ros2msg.py's module
 # docstring (gen_message_conversion.py's docstring points there rather than
 # duplicating it). Both generators consume the same JSON file and must
 # agree on what a "consumed" field is, so that logic lives here once.
 
-def load_sidecar(path: str | None) -> Sidecar:
+def load_annotations(path: str | None) -> Annotations:
     if not path:
         return {}
     with open(path) as f:
@@ -228,7 +228,7 @@ def load_sidecar(path: str | None) -> Sidecar:
 
 
 def output_proto_fields(out: OutputEntry) -> Iterator[str]:
-    """Yield proto field names consumed by one sidecar 'outputs' entry."""
+    """Yield proto field names consumed by one annotation 'outputs' entry."""
     for v in out.get('from', {}).values():
         yield v
     for sub in ('position', 'orientation'):
@@ -237,14 +237,14 @@ def output_proto_fields(out: OutputEntry) -> Iterator[str]:
                 yield v
 
 
-def sidecar_consumed(sidecar_entry: MessageSidecarEntry) -> frozenset[str]:
+def consumed_annotation_fields(annotation_entry: MessageAnnotationEntry) -> frozenset[str]:
     """
-    Return the proto field names consumed by a message's sidecar entry.
+    Return the proto field names consumed by a message's annotation entry.
 
     Right-hand side of all 'from' maps, plus all 'fields' keys. Excluded
     from passthrough emission by both generators.
     """
-    consumed = set(sidecar_entry.get('fields', {}).keys())
-    for out in sidecar_entry.get('outputs', []):
+    consumed = set(annotation_entry.get('fields', {}).keys())
+    for out in annotation_entry.get('outputs', []):
         consumed.update(output_proto_fields(out))
     return frozenset(consumed)
