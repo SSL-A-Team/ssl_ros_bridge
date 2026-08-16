@@ -40,7 +40,7 @@ _LEAGUE_MSGS_CMAKE = Path(__file__).resolve().parent.parent.parent / 'ssl_league
 sys.path.insert(0, str(_LEAGUE_MSGS_CMAKE))
 # Must follow the sys.path.insert() above, so this can't sort before the
 # rosidl_pycommon import the way import-order linting wants.
-from ateam_proto_shared import (  # noqa: E402, I100
+from proto_shared import (  # noqa: E402, I100
     Annotations,
     build_map_entry_type_names,
     classify_field_shape,
@@ -91,8 +91,14 @@ def scale_literal(val: float) -> str:
     return f'{val}f'
 
 
-def proto_accessor_expr(field_name: str) -> str:
-    return f'proto_msg.{field_name}()'
+def proto_accessor_expr(field_path: str) -> str:
+    """
+    Build a chained C++ accessor from a possibly dotted field path.
+
+    'x' -> 'proto_msg.x()'. 'designated_position.x' (one level into a
+    nested message field) -> 'proto_msg.designated_position().x()'.
+    """
+    return 'proto_msg.' + '.'.join(f'{part}()' for part in field_path.split('.'))
 
 
 # ── Annotation output codegen ─────────────────────────────────────────────────
@@ -118,11 +124,38 @@ def _emit_component_assignments(
     return lines
 
 
+def _emit_optional_output(out: OutputEntry, ind: str) -> list[str]:
+    """
+    Emit C++ for an 'outputs' entry sourced from a proto2-optional nested field.
+
+    The ROS field is a 0/1-element array (see the 'optional' key in
+    protoc_gen_ros2msg.py's module docstring); the assignment is guarded by
+    a has_<field>() check on the shared top-level source field name, taken
+    from the first 'from' entry.
+    """
+    ros_field = out['ros_field']
+    ros_type = out['ros_type']
+    from_map = out['from']
+    top_level = next(iter(from_map.values())).split('.')[0]
+    cpp_type = to_ros_cpp_type(ros_type)
+
+    inner_ind = f'{ind}  '
+    lines = [f'{ind}if (proto_msg.has_{top_level}()) {{']
+    lines.append(f'{inner_ind}{cpp_type} _value;')
+    lines += _emit_component_assignments('_value', from_map, out.get('scale'), inner_ind)
+    lines.append(f'{inner_ind}ros_msg.{ros_field}.push_back(_value);')
+    lines.append(f'{ind}}}')
+    return lines
+
+
 def emit_annotation_output(out: OutputEntry, ind: str) -> list[str]:
     """Emit C++ for one 'outputs' entry."""
     ros_field = out['ros_field']
     ros_type = out['ros_type']
     target = f'ros_msg.{ros_field}'
+
+    if out.get('optional') and ros_type in ('geometry_msgs/Point32', 'geometry_msgs/Vector3'):
+        return _emit_optional_output(out, ind)
 
     if ros_type in ('geometry_msgs/Point32', 'geometry_msgs/Vector3'):
         return _emit_component_assignments(target, out['from'], out.get('scale'), ind)
@@ -512,7 +545,10 @@ def generate_source(
             pf_map: dict[str, descriptor_pb2.FieldDescriptorProto] = {f.name: f for f in msg.field}
 
             ros_t = to_ros_msg_type(flat, ros_pkg)
-            lines.append(f'{ros_t} fromProto(const {cpp_name} & proto_msg)')
+            # [[maybe_unused]]: a message with every field annotation-skipped
+            # (e.g. RealismConfig's sole field is a skipped google.protobuf.Any)
+            # produces a body that never references proto_msg.
+            lines.append(f'{ros_t} fromProto([[maybe_unused]] const {cpp_name} & proto_msg)')
             lines.append('{')
             lines.append(f'  {ros_t} ros_msg;')
 

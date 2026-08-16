@@ -42,10 +42,26 @@ Annotation file format (per message):
         "ros_field": "pose", "ros_type": "geometry_msgs/Pose",
         "position":    { "from": { "x": "tx", ... }, "scale": 1e-3 },
         "orientation": { "from": { "x": "q0", ... } }
+      },
+      {
+        "ros_field": "designated_position", "ros_type": "geometry_msgs/Point32",
+        "from": { "x": "nested_field.x", "y": "nested_field.y" },
+        "optional": true
       }
     ]
   },
   "_skip_types": ["MsgNameToOmitEntirely", ...]
+
+  A "from" value may be a dotted path (e.g. "nested_field.x") to reach one
+  level into a nested message-type field, instead of a scalar field on the
+  containing message directly. Only the top-level name (before the dot) is
+  treated as consumed for passthrough-exclusion purposes.
+
+  An "outputs" entry normally emits a plain (non-array) ROS field, matching
+  a required or always-present proto source. Set "optional": true when the
+  source is a proto2 "optional" message-type field, to preserve presence:
+  the ROS field is emitted as a 0/1-element array instead, and the bridge
+  layer guards the assignment on the source field's own has_<field>() check.
 
   Consumed fields (right-hand side of all "from" maps, plus all "fields" keys)
   are excluded from passthrough. The generator errors on unknown field
@@ -84,7 +100,7 @@ from google.protobuf.compiler import plugin_pb2
 sys.path.insert(0, str(Path(__file__).parent))
 # Must follow the sys.path.insert() above, so this can't sort before the
 # google.protobuf imports the way import-order linting wants.
-from ateam_proto_shared import (  # noqa: E402, I100
+from proto_shared import (  # noqa: E402, I100
     Annotations,
     build_map_entry_type_names,
     classify_field_shape,
@@ -167,7 +183,7 @@ def map_field_to_ros2_type(field: descriptor_pb2.FieldDescriptorProto) -> str:
 # Annotation entry validation (error accumulation is specific to this
 # script's protoc-plugin response.error mechanism, so this stays local;
 # load_annotations/consumed_annotation_fields/output_proto_fields are
-# shared — see ateam_proto_shared.py)
+# shared — see proto_shared.py)
 # ---------------------------------------------------------------------------
 
 
@@ -321,7 +337,8 @@ def find_type_cycles(
 
 def _emit_one_output(out: OutputEntry, lines: list[str]) -> None:
     """Emit the single ROS struct field for one annotation 'outputs' entry."""
-    lines.append(f"{out['ros_type']} {out['ros_field']}")
+    suffix = '[]' if out.get('optional') else ''
+    lines.append(f"{out['ros_type']}{suffix} {out['ros_field']}")
 
 
 def _format_default_literal(value: bool | str | int | float) -> str:

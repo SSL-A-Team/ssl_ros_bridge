@@ -69,7 +69,7 @@ flowchart LR
         fromproto["fromProto() functions"]
     end
 
-    shared["ateam_proto_shared.py\n(shared naming/shape/annotation logic)"]
+    shared["proto_shared.py\n(shared naming/shape/annotation logic)"]
 
     protos --> plugin
     protos --> convgen
@@ -90,7 +90,7 @@ subprocess to get a `FileDescriptorSet`, then walks that with Python's
 the same protobuf descriptor model; they just get there differently because
 one has to conform to the protoc plugin ABI and the other doesn't.
 
-`ateam_proto_shared.py` exists so the two generators can't drift on shared
+`proto_shared.py` exists so the two generators can't drift on shared
 concerns: flattening a proto type name into a ROS-legal one, classifying a
 field's shape (repeated / oneof member / proto2-optional), and parsing the
 annotation file's `fields`/`outputs`/`_skip_types` structure.
@@ -142,7 +142,7 @@ module docstring — that's the canonical reference, not this file.
 
 ```mermaid
 flowchart TD
-    common["AteamProtoGenCommon.cmake\n(shared: run generator, fail loudly)"]
+    common["ProtoGenShared.cmake\n(shared: run generator, fail loudly)"]
     r2m["Ros2MsgGen.cmake\ngenerate_ros2_msgs()"]
     mcg["MsgConversionGen.cmake\ngenerate_message_conversion()"]
     chk["CheckGeneratedMsgList.cmake\n(staleness check, cmake -P script)"]
@@ -234,7 +234,7 @@ presence of its own.
 ## Testing
 
 `ssl_league_msgs` has a small `pytest` suite (`ssl_league_msgs/test/`)
-covering the pure logic in `ateam_proto_shared.py` and
+covering the pure logic in `proto_shared.py` and
 `protoc_gen_ros2msg.py` — name flattening, field-shape classification,
 annotation-file parsing, and `find_type_cycles()`'s cycle detection — using
 hand-built `descriptor_pb2` messages rather than real `.proto` files, so

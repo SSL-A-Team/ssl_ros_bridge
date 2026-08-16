@@ -147,7 +147,18 @@
       "command_timestamp":              { "ros_type": "builtin_interfaces/Time" },
       "stage_time_left":                { "ros_type": "builtin_interfaces/Duration" },
       "current_action_time_remaining":  { "ros_type": "builtin_interfaces/Duration" }
-    }
+    },
+    "outputs": [
+      {
+        "ros_field": "designated_position",
+        "ros_type": "geometry_msgs/Point32",
+        "from": { "x": "designated_position.x", "y": "designated_position.y" },
+        "scale": 1e-3,
+        "optional": true,
+        "_consumed": ["designated_position"],
+        "_comment": "optional nested Point message (mm); repack directly into Point32[] (0/1 elements) rather than the auto-generated RefereePoint, matching what ateam_common already expects"
+      }
+    ]
   },
 
   "RefereePoint": {

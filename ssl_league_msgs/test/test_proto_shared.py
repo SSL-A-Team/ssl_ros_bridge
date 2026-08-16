@@ -1,6 +1,7 @@
-"""Unit tests for the pure helper functions in ateam_proto_shared.py."""
+"""Unit tests for the pure helper functions in proto_shared.py."""
 
-from ateam_proto_shared import (
+from google.protobuf import descriptor_pb2
+from proto_shared import (
     build_map_entry_type_names,
     classify_field_shape,
     consumed_annotation_fields,
@@ -9,7 +10,6 @@ from ateam_proto_shared import (
     output_proto_fields,
     parse_options,
 )
-from google.protobuf import descriptor_pb2
 
 FD = descriptor_pb2.FieldDescriptorProto
 DP = descriptor_pb2.DescriptorProto

@@ -30,7 +30,7 @@
 #
 cmake_minimum_required(VERSION 3.18)  # CMAKE_CURRENT_FUNCTION_LIST_DIR (3.17), find_program(REQUIRED) (3.18)
 
-include("${CMAKE_CURRENT_LIST_DIR}/AteamProtoGenCommon.cmake")
+include("${CMAKE_CURRENT_LIST_DIR}/ProtoGenShared.cmake")
 
 function(generate_ros2_msgs)
   cmake_parse_arguments(
@@ -73,7 +73,7 @@ function(generate_ros2_msgs)
   set(_CMAKE_DIR "${CMAKE_CURRENT_FUNCTION_LIST_DIR}")
   set(_PLUGIN_SRC "${_CMAKE_DIR}/protoc_gen_ros2msg.py")
 
-  ateam_require_script("${_PLUGIN_SRC}" "generate_ros2_msgs")
+  protogen_require_script("${_PLUGIN_SRC}" "generate_ros2_msgs")
 
   file(GLOB _PLUGIN_DEPS "${_CMAKE_DIR}/*.py")
 
@@ -102,7 +102,7 @@ function(generate_ros2_msgs)
   # --- Build plugin options ---
   set(_plugin_opt "optional_submsg=${_opt_submsg}")
   if(_ARG_SIDECAR)
-    ateam_require_sidecar("${_ARG_SIDECAR}" "generate_ros2_msgs")
+    protogen_require_annotation_file("${_ARG_SIDECAR}" "generate_ros2_msgs")
     string(APPEND _plugin_opt ",sidecar=${_ARG_SIDECAR}")
     set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${_ARG_SIDECAR}")
   endif()
@@ -118,7 +118,7 @@ function(generate_ros2_msgs)
 
   # Run once now so the generated .msg file *list* is known at configure
   # time — rosidl_generate_interfaces() requires it up front.
-  ateam_run_generator(COMMAND ${_protoc_command} ERROR_PREFIX "generate_ros2_msgs: protoc")
+  protogen_run_generator(COMMAND ${_protoc_command} ERROR_PREFIX "generate_ros2_msgs: protoc")
 
   file(GLOB _generated_abs "${_ARG_OUTPUT_DIR}/msg/*.msg")
   if(NOT _generated_abs)

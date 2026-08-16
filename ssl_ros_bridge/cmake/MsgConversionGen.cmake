@@ -18,7 +18,7 @@
 
 cmake_minimum_required(VERSION 3.18)  # CMAKE_CURRENT_FUNCTION_LIST_DIR (3.17), find_program(REQUIRED) (3.18)
 
-include("${CMAKE_CURRENT_LIST_DIR}/../../ssl_league_msgs/cmake/AteamProtoGenCommon.cmake")
+include("${CMAKE_CURRENT_LIST_DIR}/../../ssl_league_msgs/cmake/ProtoGenShared.cmake")
 
 function(generate_message_conversion)
   cmake_parse_arguments(_ARG "" "OUTPUT_DIR;SIDECAR" "PROTO_FILES;PROTO_PATHS" ${ARGN})
@@ -35,10 +35,10 @@ function(generate_message_conversion)
 
   set(_CMAKE_DIR "${CMAKE_CURRENT_FUNCTION_LIST_DIR}")
   set(_SCRIPT "${_CMAKE_DIR}/gen_message_conversion.py")
-  set(_SHARED_SCRIPT "${_CMAKE_DIR}/../../ssl_league_msgs/cmake/ateam_proto_shared.py")
+  set(_SHARED_SCRIPT "${_CMAKE_DIR}/../../ssl_league_msgs/cmake/proto_shared.py")
 
-  ateam_require_script("${_SCRIPT}" "generate_message_conversion")
-  ateam_require_script("${_SHARED_SCRIPT}" "generate_message_conversion")
+  protogen_require_script("${_SCRIPT}" "generate_message_conversion")
+  protogen_require_script("${_SHARED_SCRIPT}" "generate_message_conversion")
 
   # Build --proto-paths args
   set(_path_args)
@@ -49,7 +49,7 @@ function(generate_message_conversion)
   # Build --sidecar arg
   set(_sidecar_arg)
   if(_ARG_SIDECAR)
-    ateam_require_sidecar("${_ARG_SIDECAR}" "generate_message_conversion")
+    protogen_require_annotation_file("${_ARG_SIDECAR}" "generate_message_conversion")
     set(_sidecar_arg "--sidecar" "${_ARG_SIDECAR}")
   endif()
 
@@ -69,7 +69,7 @@ function(generate_message_conversion)
 
   # Run once now so the generated files exist for configure-time consumers
   # (e.g. add_library() argument lists).
-  ateam_run_generator(COMMAND ${_gen_command} ERROR_PREFIX "generate_message_conversion: generator")
+  protogen_run_generator(COMMAND ${_gen_command} ERROR_PREFIX "generate_message_conversion: generator")
 
   set(_depends ${_ARG_PROTO_FILES} "${_SCRIPT}" "${_SHARED_SCRIPT}")
   if(_ARG_SIDECAR)

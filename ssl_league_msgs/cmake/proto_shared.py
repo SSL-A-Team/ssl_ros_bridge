@@ -7,7 +7,7 @@ generator. Both must agree on naming, map-entry detection, and annotation
 semantics; that logic lives here once instead of two copies.
 
 Import with:
-    from ateam_proto_shared import (
+    from proto_shared import (
         parse_options, flatten_type_name, strip_package,
         build_map_entry_type_names, iter_messages,
         load_annotations, consumed_annotation_fields, output_proto_fields,
@@ -65,6 +65,7 @@ OutputEntry = TypedDict(
         'ros_type': str,
         'from': dict[str, str],
         'scale': float,
+        'optional': bool,
         'position': OutputComponentSpec,
         'orientation': OutputComponentSpec,
         'conversion_func': str,
@@ -228,13 +229,21 @@ def load_annotations(path: str | None) -> Annotations:
 
 
 def output_proto_fields(out: OutputEntry) -> Iterator[str]:
-    """Yield proto field names consumed by one annotation 'outputs' entry."""
+    """
+    Yield proto field names consumed by one annotation 'outputs' entry.
+
+    A 'from' value may be a dotted path (e.g. 'designated_position.x') to
+    reach one level into a nested message-type field. Only the top-level
+    name is yielded here — that's the field actually consumed from the
+    containing message's own field list; the rest of the path is only
+    meaningful to the C++ accessor chain built at bridge-codegen time.
+    """
     for v in out.get('from', {}).values():
-        yield v
+        yield v.split('.', 1)[0]
     for sub in ('position', 'orientation'):
         if sub in out:
             for v in out[sub].get('from', {}).values():
-                yield v
+                yield v.split('.', 1)[0]
 
 
 def consumed_annotation_fields(annotation_entry: MessageAnnotationEntry) -> frozenset[str]:
