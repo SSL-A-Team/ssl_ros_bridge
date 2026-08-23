@@ -12,11 +12,11 @@ set(_PROTO_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../ssl_league_protobufs/ssl-protocol
 
 generate_ros2_msgs(
   PROTO_FILES
-    ${_PROTO_DIR}/gc/ssl_gc_common.proto
-    ${_PROTO_DIR}/gc/ssl_gc_geometry.proto
-    ${_PROTO_DIR}/gc/ssl_gc_game_event.proto
-    ${_PROTO_DIR}/gc/ssl_gc_referee_message.proto
-    ${_PROTO_DIR}/gc/ssl_gc_rcon.proto
+    ${_PROTO_DIR}/gamecontroller/ssl_gc_common.proto
+    ${_PROTO_DIR}/gamecontroller/ssl_gc_geometry.proto
+    ${_PROTO_DIR}/gamecontroller/ssl_gc_game_event.proto
+    ${_PROTO_DIR}/gamecontroller/ssl_gc_referee_message.proto
+    ${_PROTO_DIR}/gamecontroller/ssl_gc_rcon.proto
     ${_PROTO_DIR}/vision/ssl_vision_detection.proto
     ${_PROTO_DIR}/vision/ssl_vision_geometry.proto
     ${_PROTO_DIR}/vision/ssl_vision_wrapper.proto

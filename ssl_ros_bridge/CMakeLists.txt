@@ -26,11 +26,11 @@ set(_CONV_OUT  "${CMAKE_CURRENT_BINARY_DIR}/generated_conversion")
 
 generate_message_conversion(
   PROTO_FILES
-    ${_PROTO_DIR}/gc/ssl_gc_common.proto
-    ${_PROTO_DIR}/gc/ssl_gc_geometry.proto
-    ${_PROTO_DIR}/gc/ssl_gc_game_event.proto
-    ${_PROTO_DIR}/gc/ssl_gc_referee_message.proto
-    ${_PROTO_DIR}/gc/ssl_gc_rcon.proto
+    ${_PROTO_DIR}/gamecontroller/ssl_gc_common.proto
+    ${_PROTO_DIR}/gamecontroller/ssl_gc_geometry.proto
+    ${_PROTO_DIR}/gamecontroller/ssl_gc_game_event.proto
+    ${_PROTO_DIR}/gamecontroller/ssl_gc_referee_message.proto
+    ${_PROTO_DIR}/gamecontroller/ssl_gc_rcon.proto
     ${_PROTO_DIR}/vision/ssl_vision_detection.proto
     ${_PROTO_DIR}/vision/ssl_vision_geometry.proto
     ${_PROTO_DIR}/vision/ssl_vision_wrapper.proto

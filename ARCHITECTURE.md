@@ -51,7 +51,7 @@ file, but produce different output for different consumers.
 ```mermaid
 flowchart LR
     subgraph submodule["ssl-protocol-defs submodule"]
-        protos["*.proto files\n(gc/, vision/, simulation/)"]
+        protos["*.proto files\n(gamecontroller/, vision/, simulation/)"]
     end
 
     annotations["ssl_ros_annotations.json\n(sidecar/annotation file)"]

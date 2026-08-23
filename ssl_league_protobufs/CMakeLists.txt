@@ -4,59 +4,39 @@ project(ssl_league_protobufs)
 find_package(ament_cmake REQUIRED)
 find_package(Protobuf REQUIRED)
 
-# ssl-protocol-defs/ is the RoboCup-SSL/ssl-protocol-defs submodule. Its proto
-# files import each other relative to their own proto/ root (for example,
-# "gc/ssl_gc_common.proto"), and protoc mirrors that same relative path into
-# its generated #include lines and its --cpp_out layout. CMake's
-# protobuf_generate_cpp() macro instead places each output file relative to
-# CMAKE_CURRENT_SOURCE_DIR, one directory above the submodule's proto/ root.
-# The two roots disagree, so compilation fails with "no such file" on the
-# cross-includes. Invoking protoc directly with one consistent --proto_path
-# root avoids that mismatch.
-set(_PROTO_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/ssl-protocol-defs/proto")
+# ssl-protocol-defs/ is the RoboCup-SSL/ssl-protocol-defs submodule. It ships a
+# CMake module that runs protoc with a single --proto_path root, which is what
+# the cross-imports in these protos require; see the comments in
+# SSLProtocolDefs.cmake for why CMake's own protobuf_generate_cpp() cannot be
+# used here. PROTO_ROOT and the output layout are derived automatically, and
+# OUT_DIR defaults to ${CMAKE_CURRENT_BINARY_DIR}.
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/ssl-protocol-defs/cmake")
+include(SSLProtocolDefs)
 
-set(_PROTO_FILES
-  gc/ssl_gc_common.proto
-  gc/ssl_gc_game_event.proto
-  gc/ssl_gc_geometry.proto
-  gc/ssl_gc_rcon_autoref.proto
-  gc/ssl_gc_rcon_remotecontrol.proto
-  gc/ssl_gc_rcon_team.proto
-  gc/ssl_gc_rcon.proto
-  gc/ssl_gc_referee_message.proto
-  simulation/ssl_simulation_config.proto
-  simulation/ssl_simulation_control.proto
-  simulation/ssl_simulation_error.proto
-  simulation/ssl_simulation_robot_control.proto
-  simulation/ssl_simulation_robot_feedback.proto
-  simulation/ssl_simulation_synchronous.proto
-  vision/ssl_vision_detection_tracked.proto
-  vision/ssl_vision_detection.proto
-  vision/ssl_vision_geometry.proto
-  vision/ssl_vision_wrapper_tracked.proto
-  vision/ssl_vision_wrapper.proto
+ssl_protocol_defs_generate_cpp(
+  PROTOS
+    gamecontroller/ssl_gc_common.proto
+    gamecontroller/ssl_gc_game_event.proto
+    gamecontroller/ssl_gc_geometry.proto
+    gamecontroller/ssl_gc_rcon_autoref.proto
+    gamecontroller/ssl_gc_rcon_remotecontrol.proto
+    gamecontroller/ssl_gc_rcon_team.proto
+    gamecontroller/ssl_gc_rcon.proto
+    gamecontroller/ssl_gc_referee_message.proto
+    simulation/ssl_simulation_config.proto
+    simulation/ssl_simulation_control.proto
+    simulation/ssl_simulation_error.proto
+    simulation/ssl_simulation_robot_control.proto
+    simulation/ssl_simulation_robot_feedback.proto
+    simulation/ssl_simulation_synchronous.proto
+    vision/ssl_vision_detection_tracked.proto
+    vision/ssl_vision_detection.proto
+    vision/ssl_vision_geometry.proto
+    vision/ssl_vision_wrapper_tracked.proto
+    vision/ssl_vision_wrapper.proto
+  SOURCES_VAR PROTOBUF_SRCS
+  HEADERS_VAR PROTOBUF_HDRS
 )
-
-set(PROTOBUF_SRCS)
-set(PROTOBUF_HDRS)
-set(_abs_proto_files)
-foreach(_rel ${_PROTO_FILES})
-  get_filename_component(_stem "${_rel}" NAME_WLE)
-  get_filename_component(_dir "${_rel}" DIRECTORY)
-  list(APPEND PROTOBUF_SRCS "${CMAKE_CURRENT_BINARY_DIR}/${_dir}/${_stem}.pb.cc")
-  list(APPEND PROTOBUF_HDRS "${CMAKE_CURRENT_BINARY_DIR}/${_dir}/${_stem}.pb.h")
-  list(APPEND _abs_proto_files "${_PROTO_ROOT}/${_rel}")
-endforeach()
-
-add_custom_command(
-  OUTPUT ${PROTOBUF_SRCS} ${PROTOBUF_HDRS}
-  COMMAND protobuf::protoc
-  ARGS --cpp_out=${CMAKE_CURRENT_BINARY_DIR} --proto_path=${_PROTO_ROOT} ${_abs_proto_files}
-  DEPENDS ${_abs_proto_files} protobuf::protoc
-  COMMENT "Running protoc on ssl-protocol-defs protos"
-  VERBATIM
-)
-set_source_files_properties(${PROTOBUF_SRCS} ${PROTOBUF_HDRS} PROPERTIES GENERATED TRUE)
 
 add_library(${PROJECT_NAME} SHARED
   ${PROTOBUF_HDRS}
@@ -67,9 +47,10 @@ target_link_libraries(${PROJECT_NAME}
 )
 target_include_directories(${PROJECT_NAME}
   PUBLIC
-    # Generated headers live under subdirectories (gc/, vision/, simulation/)
+    # Generated headers live under subdirectories (gamecontroller/, vision/,
+    # simulation/)
     # that mirror ssl-protocol-defs' own layout, and they include each other
-    # by path from that root (for example, "gc/ssl_gc_common.pb.h"). PUBLIC,
+    # by path from that root (e.g. "gamecontroller/ssl_gc_common.pb.h"). PUBLIC,
     # not INTERFACE, because this package's own compilation needs that root
     # too, not just external consumers, to resolve those same cross-includes.
     # Two include roots are exported: the normal <ssl_league_protobufs/...>

@@ -22,7 +22,7 @@
 #define LOG2BAG__LOG_READER_HPP_
 
 #include <ssl_league_protobufs/vision/ssl_vision_wrapper.pb.h>
-#include <ssl_league_protobufs/gc/ssl_gc_referee_message.pb.h>
+#include <ssl_league_protobufs/gamecontroller/ssl_gc_referee_message.pb.h>
 #include <istream>
 #include <optional>
 #include <unordered_map>
