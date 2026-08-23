@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.8)
+cmake_minimum_required(VERSION 3.18)
 project(ssl_ros_bridge)
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
@@ -12,9 +12,35 @@ find_package(rclcpp_components REQUIRED)
 find_package(rosbag2_cpp REQUIRED)
 find_package(tf2 REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
+find_package(builtin_interfaces REQUIRED)
+find_package(geometry_msgs REQUIRED)
 find_package(ssl_league_msgs REQUIRED)
 find_package(ssl_league_protobufs REQUIRED)
 find_package(ssl_ros_bridge_msgs REQUIRED)
+
+include(cmake/MsgConversionGen.cmake)
+
+set(_PROTO_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../ssl_league_protobufs/ssl-protocol-defs/proto")
+set(_SIDECAR   "${CMAKE_CURRENT_SOURCE_DIR}/../ssl_league_msgs/cmake/ssl_ros_annotations.json")
+set(_CONV_OUT  "${CMAKE_CURRENT_BINARY_DIR}/generated_conversion")
+
+generate_message_conversion(
+  PROTO_FILES
+    ${_PROTO_DIR}/gamecontroller/ssl_gc_common.proto
+    ${_PROTO_DIR}/gamecontroller/ssl_gc_geometry.proto
+    ${_PROTO_DIR}/gamecontroller/ssl_gc_game_event.proto
+    ${_PROTO_DIR}/gamecontroller/ssl_gc_referee_message.proto
+    ${_PROTO_DIR}/gamecontroller/ssl_gc_rcon.proto
+    ${_PROTO_DIR}/vision/ssl_vision_detection.proto
+    ${_PROTO_DIR}/vision/ssl_vision_geometry.proto
+    ${_PROTO_DIR}/vision/ssl_vision_wrapper.proto
+    ${_PROTO_DIR}/simulation/ssl_simulation_config.proto
+    ${_PROTO_DIR}/simulation/ssl_simulation_control.proto
+    ${_PROTO_DIR}/simulation/ssl_simulation_error.proto
+  PROTO_PATHS ${_PROTO_DIR}
+  SIDECAR     ${_SIDECAR}
+  OUTPUT_DIR  ${_CONV_OUT}
+)
 
 add_subdirectory(src/core)
 add_subdirectory(src/game_controller_bridge)
@@ -28,8 +54,22 @@ install(DIRECTORY
 )
 
 if(BUILD_TESTING)
+  # ament_cmake_copyright is excluded from ament_lint_auto's automatic
+  # per-package hook and registered manually below instead, with an
+  # explicit EXCLUDE for the two generator scripts (no per-file header, by
+  # project decision), so the rest of the package keeps full copyright
+  # enforcement.
+  list(APPEND AMENT_LINT_AUTO_EXCLUDE ament_cmake_copyright)
+
   find_package(ament_lint_auto REQUIRED)
   ament_lint_auto_find_test_dependencies()
+
+  find_package(ament_cmake_copyright REQUIRED)
+  ament_copyright(
+    EXCLUDE
+      cmake/gen_message_conversion.py
+      cmake/MsgConversionGen.cmake
+  )
 endif()
 
 ament_package()

@@ -1,19 +1,33 @@
+# The league protos deprecate several old GameEvent oneof arms
+# ([deprecated = true] in ssl_gc_game_event.proto); protoc propagates that
+# into [[deprecated]] on the generated C++ accessors, suppress in scope.
+set_source_files_properties(
+  ${_CONV_OUT}/message_conversion_generated.cpp
+  PROPERTIES COMPILE_OPTIONS "-Wno-deprecated-declarations"
+)
+
 add_library(${PROJECT_NAME}_core SHARED
     get_ip_addresses.cpp
-    message_conversion.cpp
     multicast_receiver.cpp
+    ${_CONV_OUT}/message_conversion_generated.cpp
 )
-target_include_directories(${PROJECT_NAME}_core PUBLIC .)
+
+target_include_directories(${PROJECT_NAME}_core PUBLIC . ${_CONV_OUT})
 ament_target_dependencies(${PROJECT_NAME}_core
   rclcpp
+  builtin_interfaces
+  geometry_msgs
   ssl_league_msgs
   ssl_league_protobufs
   tf2
   tf2_geometry_msgs
 )
+
 target_link_libraries(${PROJECT_NAME}_core
   Boost::boost
   protobuf::libprotobuf
 )
+
 target_compile_features(${PROJECT_NAME}_core PUBLIC cxx_std_20)
+
 install(TARGETS ${PROJECT_NAME}_core DESTINATION lib)

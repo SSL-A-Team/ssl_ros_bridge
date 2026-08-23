@@ -22,7 +22,7 @@
 #include <string>
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp_components/register_node_macro.hpp>
-#include "core/message_conversion.hpp"
+#include "message_conversion_generated.hpp"
 #include "core/multicast_receiver.hpp"
 #include "core/protobuf_logging.hpp"
 #include <ssl_ros_bridge_msgs/msg/team_client_connection_status.hpp>

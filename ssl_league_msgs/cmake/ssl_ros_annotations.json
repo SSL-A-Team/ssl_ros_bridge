@@ -1,0 +1,267 @@
+{
+  "_comment": "Sidecar annotation file for SSL league proto → ROS2 msg generation.",
+  "_schema": {
+    "fields": "Map of proto_field_name → annotation. Consumed by the annotation; not emitted as passthrough.",
+    "outputs": "List of multi-field → single ROS struct rules. All proto fields referenced in 'from' (or nested position/orientation 'from') are consumed.",
+    "from": "Map of ros_component_name → proto_field_name (direction: proto → ROS).",
+    "scale": "Multiply all consumed scalar components by this factor (metadata; applied at bridge layer).",
+    "ros_type": "Override emitted ROS type. Required for builtin_interfaces/Time and /Duration (triggers intrinsic conversion based on proto wire type: float/double → from_seconds, int/uint → from_microseconds).",
+    "ros_field": "Override output field name. Omit to keep proto field name.",
+    "conversion_func": "Reserved for future user-supplied conversions. Only intrinsic conversions (Time/Duration) are supported now; generator errors on any user-supplied value.",
+    "skip": "On a field annotation: omit this field from the generated .msg entirely (must be the only key in the annotation). For proto constructs with no sane ROS mapping, e.g. google.protobuf.Any.",
+    "default": "ROS2 .msg default value for this field (proto has no equivalent — [default=] is proto2-only and not read by the generator). Not supported on genuinely repeated fields. On a proto2 'optional' scalar (modeled as a 0/1-element ROS array), emits a 1-element array default, matching the presence convention: proto unset -> empty array, ROS default -> that one value present.",
+    "_skip_types": "Top-level list of message names to omit entirely (no .msg file emitted). Any field elsewhere referencing a skipped type must itself carry a 'skip' annotation, or generation errors."
+  },
+
+  "_skip_types": [],
+
+  "DetectionBall": {
+    "outputs": [
+      {
+        "ros_field": "pos",
+        "ros_type": "geometry_msgs/Point32",
+        "from": { "x": "x", "y": "y", "z": "z" },
+        "scale": 1e-3,
+        "_consumed": ["x", "y", "z"],
+        "_comment": "World position in mm → m"
+      },
+      {
+        "ros_field": "pixel",
+        "ros_type": "geometry_msgs/Point32",
+        "from": { "x": "pixel_x", "y": "pixel_y" },
+        "_consumed": ["pixel_x", "pixel_y"],
+        "_comment": "Image-space pixel coordinates, no scale"
+      }
+    ]
+  },
+
+  "DetectionRobot": {
+    "outputs": [
+      {
+        "ros_field": "pos",
+        "ros_type": "geometry_msgs/Point32",
+        "from": { "x": "x", "y": "y" },
+        "scale": 1e-3,
+        "_consumed": ["x", "y"],
+        "_comment": "World position in mm → m; z omitted (2D system)"
+      },
+      {
+        "ros_field": "pixel",
+        "ros_type": "geometry_msgs/Point32",
+        "from": { "x": "pixel_x", "y": "pixel_y" },
+        "_consumed": ["pixel_x", "pixel_y"]
+      }
+    ],
+    "fields": {
+      "height": { "scale": 1e-3 }
+    }
+  },
+
+  "DetectionFrame": {
+    "fields": {
+      "t_capture":        { "ros_type": "builtin_interfaces/Time" },
+      "t_sent":           { "ros_type": "builtin_interfaces/Time" },
+      "t_capture_camera": { "ros_type": "builtin_interfaces/Time" }
+    }
+  },
+
+  "GeometryCameraCalibration": {
+    "outputs": [
+      {
+        "ros_field": "pose",
+        "ros_type": "geometry_msgs/Pose",
+        "position": {
+          "from": { "x": "tx", "y": "ty", "z": "tz" },
+          "scale": 1e-3,
+          "_comment": "Camera translation in mm → m"
+        },
+        "orientation": {
+          "from": { "x": "q0", "y": "q1", "z": "q2", "w": "q3" },
+          "_comment": "SSL convention: q0=x q1=y q2=z q3=w (non-standard order)"
+        },
+        "_consumed": ["tx", "ty", "tz", "q0", "q1", "q2", "q3"]
+      },
+      {
+        "ros_field": "principal_point",
+        "ros_type": "geometry_msgs/Point32",
+        "from": { "x": "principal_point_x", "y": "principal_point_y" },
+        "_consumed": ["principal_point_x", "principal_point_y"]
+      },
+      {
+        "ros_field": "derived_camera_world_t",
+        "ros_type": "geometry_msgs/Point32",
+        "from": { "x": "derived_camera_world_tx", "y": "derived_camera_world_ty", "z": "derived_camera_world_tz" },
+        "scale": 1e-3,
+        "_consumed": ["derived_camera_world_tx", "derived_camera_world_ty", "derived_camera_world_tz"]
+      }
+    ]
+  },
+
+  "GeometryFieldSize": {
+    "fields": {
+      "field_length":                 { "scale": 1e-3, "ros_type": "float32" },
+      "field_width":                  { "scale": 1e-3, "ros_type": "float32" },
+      "goal_width":                   { "scale": 1e-3, "ros_type": "float32" },
+      "goal_depth":                   { "scale": 1e-3, "ros_type": "float32" },
+      "boundary_width":               { "scale": 1e-3, "ros_type": "float32" },
+      "penalty_area_depth":           { "scale": 1e-3, "ros_type": "float32" },
+      "penalty_area_width":           { "scale": 1e-3, "ros_type": "float32" },
+      "center_circle_radius":         { "scale": 1e-3, "ros_type": "float32" },
+      "line_thickness":               { "scale": 1e-3, "ros_type": "float32" },
+      "goal_center_to_penalty_mark":  { "scale": 1e-3, "ros_type": "float32" },
+      "goal_height":                  { "scale": 1e-3, "ros_type": "float32" },
+      "ball_radius":                  { "scale": 1e-3 },
+      "max_robot_radius":             { "scale": 1e-3 }
+    }
+  },
+
+  "FieldCircularArc": {
+    "fields": {
+      "radius":    { "scale": 1e-3 },
+      "thickness": { "scale": 1e-3 }
+    }
+  },
+
+  "FieldLineSegment": {
+    "fields": {
+      "thickness": { "scale": 1e-3 }
+    }
+  },
+
+  "Vector2f": {
+    "fields": {
+      "x": { "scale": 1e-3 },
+      "y": { "scale": 1e-3 }
+    }
+  },
+
+  "GeometryData": {
+    "fields": {
+      "calib": { "ros_field": "calibration" }
+    }
+  },
+
+  "Referee": {
+    "fields": {
+      "packet_timestamp":               { "ros_type": "builtin_interfaces/Time" },
+      "command_timestamp":              { "ros_type": "builtin_interfaces/Time" },
+      "stage_time_left":                { "ros_type": "builtin_interfaces/Duration" },
+      "current_action_time_remaining":  { "ros_type": "builtin_interfaces/Duration" }
+    },
+    "outputs": [
+      {
+        "ros_field": "designated_position",
+        "ros_type": "geometry_msgs/Point32",
+        "from": { "x": "designated_position.x", "y": "designated_position.y" },
+        "scale": 1e-3,
+        "optional": true,
+        "_consumed": ["designated_position"],
+        "_comment": "optional nested Point message (mm); repack directly into Point32[] (0/1 elements) rather than the auto-generated RefereePoint, matching what ateam_common already expects"
+      }
+    ]
+  },
+
+  "RefereePoint": {
+    "fields": {
+      "x": { "scale": 1e-3 },
+      "y": { "scale": 1e-3 }
+    }
+  },
+
+  "GameEventKeeperHeldBall": {
+    "fields": {
+      "duration": { "ros_type": "builtin_interfaces/Duration" }
+    }
+  },
+
+  "GameEventBotHeldBallDeliberately": {
+    "fields": {
+      "duration": { "ros_type": "builtin_interfaces/Duration" }
+    }
+  },
+
+  "GameEventKickTimeout": {
+    "fields": {
+      "time": { "ros_type": "builtin_interfaces/Duration" }
+    }
+  },
+
+  "GameEventNoProgressInGame": {
+    "fields": {
+      "time": { "ros_type": "builtin_interfaces/Duration" }
+    }
+  },
+
+  "GameEventPlacementSucceeded": {
+    "fields": {
+      "time_taken": { "ros_type": "builtin_interfaces/Duration" }
+    }
+  },
+
+  "GameEventPrepared": {
+    "fields": {
+      "time_taken": { "ros_type": "builtin_interfaces/Duration" }
+    }
+  },
+
+  "TeleportBall": {
+    "outputs": [
+      {
+        "ros_field": "pos",
+        "ros_type": "geometry_msgs/Point32",
+        "from": { "x": "x", "y": "y", "z": "z" },
+        "_consumed": ["x", "y", "z"],
+        "_comment": "already meters (proto field comments say [m]) -- no scale, unlike SSL vision/geometry protos which use mm"
+      },
+      {
+        "ros_field": "velocity",
+        "ros_type": "geometry_msgs/Vector3",
+        "from": { "x": "vx", "y": "vy", "z": "vz" },
+        "_consumed": ["vx", "vy", "vz"]
+      }
+    ]
+  },
+
+  "TeleportRobot": {
+    "outputs": [
+      {
+        "ros_field": "pos",
+        "ros_type": "geometry_msgs/Point32",
+        "from": { "x": "x", "y": "y" },
+        "_consumed": ["x", "y"],
+        "_comment": "meters; z unused (2D). orientation (yaw, rad) passes through separately -- not packaged into a quaternion"
+      },
+      {
+        "ros_field": "velocity",
+        "ros_type": "geometry_msgs/Vector3",
+        "from": { "x": "v_x", "y": "v_y" },
+        "_consumed": ["v_x", "v_y"],
+        "_comment": "z unused; angular velocity is scalar v_angular (2D yaw rate), passes through separately rather than as a 3-vector"
+      }
+    ]
+  },
+
+  "RobotSpecs": {
+    "fields": {
+      "custom": { "skip": true, "_comment": "google.protobuf.Any; simulator-specific, no fixed schema to map to ROS" }
+    }
+  },
+
+  "RealismConfig": {
+    "fields": {
+      "custom": { "skip": true, "_comment": "google.protobuf.Any; simulator-specific, no fixed schema to map to ROS" }
+    }
+  },
+
+  "GameEventMultipleFouls": {
+    "fields": {
+      "caused_game_events": { "skip": true, "_comment": "repeated GameEvent -- recursive self-reference (GameEvent -> GameEventMultipleFouls -> GameEvent); ROS2 messages are fixed-layout structs and cannot be self-referential. Same conclusion reached by the hand-crafted msgs this generator replaces (see main branch MultipleFouls.msg TODO)." }
+    }
+  },
+
+  "SimulatorControl": {
+    "fields": {
+      "simulation_speed": { "default": 1.0, "_comment": "proto has no [default=]; matches the hand-crafted msg this generator replaces, which defaulted to normal (1x) speed" }
+    }
+  }
+}

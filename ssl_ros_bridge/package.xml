@@ -20,7 +20,19 @@
   <depend>ssl_ros_bridge_msgs</depend>
 
   <test_depend>ament_lint_auto</test_depend>
-  <test_depend>ament_lint_common</test_depend>
+  <!-- ament_lint_common bundles ament_cmake_copyright; depend on the other
+       linters individually and re-add ament_cmake_copyright separately so
+       CMakeLists.txt can call ament_copyright() with an explicit EXCLUDE
+       for the two generator scripts (no per-file header, by project
+       decision) while still enforcing it on the rest of the package. -->
+  <test_depend>ament_cmake_copyright</test_depend>
+  <test_depend>ament_cmake_cppcheck</test_depend>
+  <test_depend>ament_cmake_cpplint</test_depend>
+  <test_depend>ament_cmake_flake8</test_depend>
+  <test_depend>ament_cmake_lint_cmake</test_depend>
+  <test_depend>ament_cmake_pep257</test_depend>
+  <test_depend>ament_cmake_uncrustify</test_depend>
+  <test_depend>ament_cmake_xmllint</test_depend>
 
   <export>
     <build_type>ament_cmake</build_type>
