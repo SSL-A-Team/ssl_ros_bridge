@@ -20,6 +20,7 @@
 
 #include "message_conversion.hpp"
 #include <tf2/LinearMath/Quaternion.h>
+#include <tf2/utils.h>
 #include <algorithm>
 #include <rclcpp/time.hpp>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
@@ -723,6 +724,68 @@ ssl_league_msgs::msg::VisionWrapper fromProto(const SSL_WrapperPacket & proto_ms
   }
 
   return ros_msg;
+}
+
+SimulatorControl fromMsg(const ssl_league_msgs::msg::SimulatorControl & ros_msg)
+{
+  SimulatorControl sim_control;
+
+  if (ros_msg.teleport_ball.size() != 0) {
+    auto ball_msg = ros_msg.teleport_ball[0];
+    TeleportBall * proto_teleport_ball = sim_control.mutable_teleport_ball();
+
+    proto_teleport_ball->set_x(ball_msg.pose.position.x);
+    proto_teleport_ball->set_y(ball_msg.pose.position.y);
+    proto_teleport_ball->set_z(ball_msg.pose.position.z);
+
+    proto_teleport_ball->set_vx(ball_msg.twist.linear.x);
+    proto_teleport_ball->set_vy(ball_msg.twist.linear.y);
+    proto_teleport_ball->set_vz(ball_msg.twist.linear.z);
+
+    proto_teleport_ball->set_teleport_safely(ball_msg.teleport_safely);
+    proto_teleport_ball->set_roll(ball_msg.roll);
+    proto_teleport_ball->set_by_force(ball_msg.by_force);
+  }
+
+  if (ros_msg.teleport_robot.size() != 0) {
+    for (auto robot_msg : ros_msg.teleport_robot) {
+      TeleportRobot * proto_teleport_robot = sim_control.add_teleport_robot();
+      RobotId * proto_robot_id = proto_teleport_robot->mutable_id();
+
+      if (robot_msg.id.id.size() != 0) {
+        proto_robot_id->set_id(robot_msg.id.id[0]);
+      } else {
+        throw std::invalid_argument("No robot number specified");
+      }
+
+      if (robot_msg.id.team.size() != 0) {
+        proto_robot_id->set_team(static_cast<Team>(robot_msg.id.team[0].color));
+      } else {
+        throw std::invalid_argument("No robot team specified");
+      }
+
+      proto_teleport_robot->set_x(robot_msg.pose.position.x);
+      proto_teleport_robot->set_y(robot_msg.pose.position.y);
+
+      // Orientation
+      tf2::Quaternion tf2_quat;
+      tf2::fromMsg(robot_msg.pose.orientation, tf2_quat);
+      proto_teleport_robot->set_orientation(tf2::getYaw(tf2_quat));
+
+      proto_teleport_robot->set_v_x(robot_msg.twist.linear.x);
+      proto_teleport_robot->set_v_y(robot_msg.twist.linear.y);
+
+      proto_teleport_robot->set_v_angular(robot_msg.twist.angular.z);
+
+      proto_teleport_robot->set_present(robot_msg.present);
+
+      proto_teleport_robot->set_by_force(robot_msg.by_force);
+    }
+  }
+
+  sim_control.set_simulation_speed(ros_msg.simulation_speed);
+
+  return sim_control;
 }
 
 }  // namespace ssl_ros_bridge::message_conversion
