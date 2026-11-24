@@ -19,6 +19,7 @@ find_package(ssl_ros_bridge_msgs REQUIRED)
 add_subdirectory(src/core)
 add_subdirectory(src/game_controller_bridge)
 add_subdirectory(src/log2bag)
+add_subdirectory(src/sim_control_bridge)
 add_subdirectory(src/team_client)
 add_subdirectory(src/vision_bridge)
 
