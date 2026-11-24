@@ -18,7 +18,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#include <ssl_league_protobufs/ssl_simulation_control.pb.h>
+#include <ssl_league_protobufs/simulation/ssl_simulation_control.pb.h>
 #include <boost/asio.hpp>
 #include <boost/system/result.hpp>
 #include <rclcpp/rclcpp.hpp>

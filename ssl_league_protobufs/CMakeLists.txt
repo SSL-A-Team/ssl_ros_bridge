@@ -56,6 +56,7 @@ target_include_directories(${PROJECT_NAME}
   PUBLIC
     $<BUILD_INTERFACE:${GENERATED_SRCS_DIR}>
     $<INSTALL_INTERFACE:include>
+    $<INSTALL_INTERFACE:include/${PROJECT_NAME}>
 )
 # Disable noisy deprecation warnings we can't control from league protobufs
 target_compile_options(${PROJECT_NAME} PRIVATE -Wno-deprecated-declarations)
