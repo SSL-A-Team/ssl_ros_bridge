@@ -18,12 +18,12 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
+#include <ssl_league_protobufs/ssl_simulation_control.pb.h>
 #include <boost/asio.hpp>
 #include <boost/system/result.hpp>
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp_components/register_node_macro.hpp>
 #include <ssl_league_msgs/srv/send_simulator_control_packet.hpp>
-#include <ssl_league_protobufs/ssl_simulation_control.pb.h>
 #include "core/protobuf_logging.hpp"
 #include "core/message_conversion.hpp"
 
