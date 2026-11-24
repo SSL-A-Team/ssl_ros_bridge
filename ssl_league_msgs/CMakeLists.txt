@@ -79,6 +79,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   ${SIMULATOR_MSG_DIR}:msg/SimulatorControl.msg
   ${SIMULATOR_MSG_DIR}:msg/TeleportBallCommand.msg
   ${SIMULATOR_MSG_DIR}:msg/TeleportRobotCommand.msg
+  ${SIMULATOR_MSG_DIR}:srv/SendSimulatorControlPacket.srv
 
   DEPENDENCIES
   builtin_interfaces

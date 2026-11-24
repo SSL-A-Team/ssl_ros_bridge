@@ -28,6 +28,7 @@
 #include <ssl_league_protobufs/ssl_vision_detection.pb.h>
 #include <ssl_league_protobufs/ssl_vision_geometry.pb.h>
 #include <ssl_league_protobufs/ssl_vision_wrapper.pb.h>
+#include <ssl_league_protobufs/ssl_simulation_control.pb.h>
 
 #include <ssl_league_msgs/msg/referee.hpp>
 #include <ssl_league_msgs/msg/team_info.hpp>
@@ -43,6 +44,7 @@
 #include <ssl_league_msgs/msg/vision_geometry_camera_calibration.hpp>
 #include <ssl_league_msgs/msg/vision_geometry_data.hpp>
 #include <ssl_league_msgs/msg/vision_wrapper.hpp>
+#include <ssl_league_msgs/msg/simulator_control.hpp>
 
 #include <geometry_msgs/msg/point32.hpp>
 
@@ -131,6 +133,8 @@ ssl_league_msgs::msg::VisionGeometryCameraCalibration fromProto(
 ssl_league_msgs::msg::VisionGeometryData fromProto(const SSL_GeometryData & proto_msg);
 
 ssl_league_msgs::msg::VisionWrapper fromProto(const SSL_WrapperPacket & proto_msg);
+
+SimulatorControl fromMsg(const ssl_league_msgs::msg::SimulatorControl & ros_msg);
 
 }  // namespace ssl_ros_bridge::message_conversion
 
