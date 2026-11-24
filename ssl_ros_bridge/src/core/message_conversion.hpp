@@ -21,13 +21,13 @@
 #ifndef CORE__MESSAGE_CONVERSION_HPP_
 #define CORE__MESSAGE_CONVERSION_HPP_
 
-#include <ssl_league_protobufs/ssl_gc_referee_message.pb.h>
-#include <ssl_league_protobufs/ssl_gc_game_event.pb.h>
-#include <ssl_league_protobufs/ssl_gc_common.pb.h>
-#include <ssl_league_protobufs/ssl_gc_geometry.pb.h>
-#include <ssl_league_protobufs/ssl_vision_detection.pb.h>
-#include <ssl_league_protobufs/ssl_vision_geometry.pb.h>
-#include <ssl_league_protobufs/ssl_vision_wrapper.pb.h>
+#include <ssl_league_protobufs/gamecontroller/ssl_gc_referee_message.pb.h>
+#include <ssl_league_protobufs/gamecontroller/ssl_gc_game_event.pb.h>
+#include <ssl_league_protobufs/gamecontroller/ssl_gc_common.pb.h>
+#include <ssl_league_protobufs/gamecontroller/ssl_gc_geometry.pb.h>
+#include <ssl_league_protobufs/vision/ssl_vision_detection.pb.h>
+#include <ssl_league_protobufs/vision/ssl_vision_geometry.pb.h>
+#include <ssl_league_protobufs/vision/ssl_vision_wrapper.pb.h>
 
 #include <ssl_league_msgs/msg/referee.hpp>
 #include <ssl_league_msgs/msg/team_info.hpp>

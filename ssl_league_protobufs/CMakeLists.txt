@@ -66,7 +66,7 @@ ament_export_dependencies(Protobuf)
 
 install(
   DIRECTORY ${GENERATED_SRCS_DIR}/
-  DESTINATION include
+  DESTINATION include/${PROJECT_NAME}
   FILES_MATCHING PATTERN "*.pb.h"
 )
 install(TARGETS ${PROJECT_NAME}
